@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
@@ -35,18 +34,38 @@ if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROT
     $_SERVER['SERVER_PORT'] = '443';
 }
 
-// Register the Composer autoloader...
-require __DIR__ . '/../vendor/autoload.php';
+try {
+    // Register the Composer autoloader...
+    require __DIR__ . '/../vendor/autoload.php';
 
-// Bootstrap Laravel and handle the request...
-/** @var \Illuminate\Foundation\Application $app */
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+    // Bootstrap Laravel and handle the request...
+    /** @var \Illuminate\Foundation\Application $app */
+    $app = require_once __DIR__ . '/../bootstrap/app.php';
 
-// Explicitly bind writable serverless storage path
-$app->useStoragePath('/tmp/storage');
+    // Explicitly bind writable serverless storage path
+    $app->useStoragePath('/tmp/storage');
 
-// Handle the incoming request via Laravel Http Kernel
-$request = Request::capture();
-$response = $app->handleRequest($request);
+    // Handle the incoming request via Laravel Http Kernel
+    $kernel = $app->make(\Illuminate\Contracts\Http\Kernel::class);
+    $request = Request::capture();
+    $response = $kernel->handle($request);
+    $response->send();
+    $kernel->terminate($request, $response);
 
-$response->send();
+} catch (\Throwable $e) {
+    // Raw error output for debugging — will show exact 500 cause
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error' => true,
+        'message' => $e->getMessage(),
+        'file' => $e->getFile() . ':' . $e->getLine(),
+        'trace' => array_slice(
+            array_map(
+                fn($t) => ($t['file'] ?? '?') . ':' . ($t['line'] ?? '?') . ' ' . ($t['class'] ?? '') . ($t['type'] ?? '') . ($t['function'] ?? ''),
+                $e->getTrace()
+            ),
+            0, 15
+        ),
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+}
