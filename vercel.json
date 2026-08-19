@@ -5,6 +5,9 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.3"
+    },
+    "api/debug.php": {
+      "runtime": "vercel-php@0.7.3"
     }
   },
   "routes": [
@@ -17,13 +20,17 @@
       "dest": "/$1"
     },
     {
+      "src": "/_debug",
+      "dest": "/api/debug.php"
+    },
+    {
       "src": "/(.*)",
       "dest": "/api/index.php"
     }
   ],
   "env": {
     "APP_ENV": "production",
-    "APP_DEBUG": "false",
+    "APP_DEBUG": "true",
     "CACHE_STORE": "array",
     "SESSION_DRIVER": "cookie",
     "LOG_CHANNEL": "stderr"
