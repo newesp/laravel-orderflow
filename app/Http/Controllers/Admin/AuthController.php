@@ -62,7 +62,7 @@ class AuthController extends Controller
 
         try {
             $user = $this->adminAuthService->attemptSupabaseTokenLogin($token);
-            $this->adminAuthService->loginSession($request, $user);
+            $this->adminAuthService->loginSession($request, $user, $token);
             Auth::guard('admin')->login($user);
 
             if ($request->wantsJson()) {

@@ -53,15 +53,21 @@ class AdminAuthService
         return $this->supabaseJwksService->validateToken($accessToken);
     }
 
-    public function loginSession(Request $request, AdminSessionUser $user): void
+    public function loginSession(Request $request, AdminSessionUser $user, ?string $token = null): void
     {
         $request->session()->put('admin_user', $user->toArray());
+        
+        if ($token) {
+            $request->session()->put('supabase_access_token', $token);
+        }
+        
         $request->session()->regenerate();
     }
 
     public function logoutSession(Request $request): void
     {
         $request->session()->forget('admin_user');
+        $request->session()->forget('supabase_access_token');
         $request->session()->invalidate();
         $request->session()->regenerateToken();
     }

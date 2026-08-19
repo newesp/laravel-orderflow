@@ -32,8 +32,10 @@ class SupabaseStorageService
 
         if ($this->isSupabaseConfigured()) {
             $url = rtrim($this->supabaseUrl, '/') . '/storage/v1/object/product-images/' . $filePath;
+            $authToken = session('supabase_access_token') ?? $this->supabaseKey;
+
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->supabaseKey,
+                'Authorization' => 'Bearer ' . $authToken,
                 'apikey' => $this->supabaseKey,
                 'Content-Type' => $mimeType,
                 'cache-control' => '3600',
@@ -76,8 +78,10 @@ class SupabaseStorageService
 
         if ($this->isSupabaseConfigured()) {
             $url = rtrim($this->supabaseUrl, '/') . '/storage/v1/object/product-files/' . $filePath;
+            $authToken = session('supabase_access_token') ?? $this->supabaseKey;
+
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->supabaseKey,
+                'Authorization' => 'Bearer ' . $authToken,
                 'apikey' => $this->supabaseKey,
                 'Content-Type' => $mimeType,
                 'cache-control' => '3600',
