@@ -16,7 +16,7 @@ class AdminIntegrationLogApiController extends Controller
         if ($search = $request->input('search')) {
             $clean = strtolower(trim($search));
             $query->where(function ($q) use ($clean) {
-                $q->whereRaw('LOWER(reference_id) LIKE ?', ["%{$clean}%"])
+                $q->whereRaw('LOWER(CAST(reference_id AS TEXT)) LIKE ?', ["%{$clean}%"])
                   ->orWhereRaw('LOWER(target) LIKE ?', ["%{$clean}%"])
                   ->orWhereRaw('LOWER(event_type) LIKE ?', ["%{$clean}%"]);
             });

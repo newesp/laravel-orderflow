@@ -17,8 +17,8 @@ class AdminOrderApiController extends Controller
         if ($search = $request->input('search')) {
             $clean = strtolower(trim($search));
             $query->where(function ($q) use ($clean) {
-                $q->whereRaw('LOWER(id) LIKE ?', ["%{$clean}%"])
-                  ->orWhereRaw('LOWER(user_id) LIKE ?', ["%{$clean}%"])
+                $q->whereRaw('LOWER(CAST(id AS TEXT)) LIKE ?', ["%{$clean}%"])
+                  ->orWhereRaw('LOWER(CAST(user_id AS TEXT)) LIKE ?', ["%{$clean}%"])
                   ->orWhereHas('profile', function ($pq) use ($clean) {
                       $pq->whereRaw('LOWER(display_name) LIKE ?', ["%{$clean}%"]);
                   });

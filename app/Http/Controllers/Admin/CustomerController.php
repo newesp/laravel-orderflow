@@ -18,7 +18,7 @@ class CustomerController extends Controller
             $query->where(function ($q) use ($clean) {
                 $q->whereRaw('LOWER(display_name) LIKE ?', ["%{$clean}%"])
                   ->orWhereRaw('LOWER(email) LIKE ?', ["%{$clean}%"])
-                  ->orWhereRaw('LOWER(id) LIKE ?', ["%{$clean}%"]);
+                  ->orWhereRaw('LOWER(CAST(id AS TEXT)) LIKE ?', ["%{$clean}%"]);
             });
         }
 
