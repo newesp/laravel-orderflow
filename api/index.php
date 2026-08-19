@@ -42,6 +42,9 @@ require __DIR__ . '/../vendor/autoload.php';
 /** @var \Illuminate\Foundation\Application $app */
 $app = require_once __DIR__ . '/../bootstrap/app.php';
 
+// Explicitly bind writable serverless storage path
+$app->useStoragePath('/tmp/storage');
+
 // Handle the incoming request via Laravel Http Kernel
 $request = Request::capture();
 $response = $app->handleRequest($request);
