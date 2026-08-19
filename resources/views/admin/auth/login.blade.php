@@ -52,6 +52,7 @@
                 <div id="supabase-sso-area" class="space-y-3">
                     <button type="button"
                             id="google-sso-btn"
+                            data-loading-click
                             onclick="handleGoogleSsoClick()"
                             class="w-full py-2.5 px-4 bg-white hover:bg-slate-100 text-slate-900 text-sm font-semibold rounded-lg shadow-sm border border-slate-300 transition flex items-center justify-center space-x-2.5">
                         <svg class="w-4 h-4" viewBox="0 0 24 24">
@@ -132,6 +133,11 @@
             if (!supabaseUrl) {
                 alert('SUPABASE_URL is not configured in server environment.');
                 return;
+            }
+
+            const btn = document.getElementById('google-sso-btn');
+            if (btn && window.setButtonLoading) {
+                window.setButtonLoading(btn);
             }
 
             // Redirect to Supabase OAuth Google authorize URL
