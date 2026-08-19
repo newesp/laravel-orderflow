@@ -13,13 +13,15 @@ class SupabaseStorageService
 {
     protected ?string $supabaseUrl;
     protected ?string $supabaseKey;
+    protected ?string $serviceRoleKey;
 
     public function __construct()
     {
         $this->supabaseUrl = config('services.supabase.url') ?? env('SUPABASE_URL');
-        $this->supabaseKey = config('services.supabase.service_role_key')
+        $this->serviceRoleKey = config('services.supabase.service_role_key') ?? env('SUPABASE_SERVICE_ROLE_KEY');
+        
+        $this->supabaseKey = $this->serviceRoleKey
             ?? config('services.supabase.anon_key')
-            ?? env('SUPABASE_SERVICE_ROLE_KEY')
             ?? env('SUPABASE_ANON_KEY');
     }
 
@@ -32,7 +34,7 @@ class SupabaseStorageService
 
         if ($this->isSupabaseConfigured()) {
             $url = rtrim($this->supabaseUrl, '/') . '/storage/v1/object/product-images/' . $filePath;
-            $authToken = session('supabase_access_token') ?? $this->supabaseKey;
+            $authToken = $this->serviceRoleKey ?? session('supabase_access_token') ?? $this->supabaseKey;
 
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $authToken,
@@ -44,6 +46,9 @@ class SupabaseStorageService
 
             if (!$response->successful()) {
                 Log::error('Supabase image upload failed: ' . $response->body());
+                if ($response->status() === 403 && str_contains($response->body(), 'row-level security policy')) {
+                    throw new RuntimeException('Supabase RLS Error: Your upload was rejected. Please ensure you have added SUPABASE_SERVICE_ROLE_KEY to your .env file to bypass RLS for backend uploads, or ensure you are logged in via Supabase Auth with an admin role. Original error: ' . $response->body());
+                }
                 throw new RuntimeException('Failed to upload image to Supabase Storage: ' . $response->status() . ' ' . $response->body());
             }
 
@@ -78,7 +83,7 @@ class SupabaseStorageService
 
         if ($this->isSupabaseConfigured()) {
             $url = rtrim($this->supabaseUrl, '/') . '/storage/v1/object/product-files/' . $filePath;
-            $authToken = session('supabase_access_token') ?? $this->supabaseKey;
+            $authToken = $this->serviceRoleKey ?? session('supabase_access_token') ?? $this->supabaseKey;
 
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $authToken,
@@ -90,6 +95,9 @@ class SupabaseStorageService
 
             if (!$response->successful()) {
                 Log::error('Supabase digital file upload failed: ' . $response->body());
+                if ($response->status() === 403 && str_contains($response->body(), 'row-level security policy')) {
+                    throw new RuntimeException('Supabase RLS Error: Your upload was rejected. Please ensure you have added SUPABASE_SERVICE_ROLE_KEY to your .env file to bypass RLS for backend uploads, or ensure you are logged in via Supabase Auth with an admin role. Original error: ' . $response->body());
+                }
                 throw new RuntimeException('Failed to upload digital file to Supabase Storage: ' . $response->status() . ' ' . $response->body());
             }
 
