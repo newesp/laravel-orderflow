@@ -15,7 +15,7 @@ use Throwable;
 
 class SupabaseJwksService
 {
-    public function getJwksUrl(): string
+    public function getSupabaseUrl(): string
     {
         $supabaseUrl = config('services.supabase.url') ?? env('SUPABASE_URL', '');
 
@@ -23,7 +23,12 @@ class SupabaseJwksService
             throw new RuntimeException('SUPABASE_URL environment variable is not configured.');
         }
 
-        return rtrim($supabaseUrl, '/') . '/auth/v1/.well-known/jwks.json';
+        return rtrim($supabaseUrl, '/');
+    }
+
+    public function getJwksUrl(): string
+    {
+        return $this->getSupabaseUrl() . '/auth/v1/.well-known/jwks.json';
     }
 
     public function fetchJwks(): array
@@ -45,6 +50,13 @@ class SupabaseJwksService
     /**
      * Validate Supabase Access Token against Supabase JWKS and check profile admin role.
      *
+     * Validates:
+     * - signature valid (via JWKS public key)
+     * - exp valid
+     * - iss = {SUPABASE_URL}/auth/v1
+     * - aud = authenticated
+     * - sub exists
+     *
      * @throws ForbiddenAdminException
      * @throws RuntimeException
      */
@@ -61,12 +73,27 @@ class SupabaseJwksService
             throw new RuntimeException('Invalid or expired Supabase access token: ' . $e->getMessage(), 401, $e);
         }
 
+        // Validate sub exists
         $userId = $decoded->sub ?? null;
         if (empty($userId)) {
             throw new RuntimeException('Supabase access token is missing sub claim.', 401);
         }
 
-        // Query public.profiles using the validated sub (user_id)
+        // Validate iss = {SUPABASE_URL}/auth/v1
+        $expectedIssuer = $this->getSupabaseUrl() . '/auth/v1';
+        if (!isset($decoded->iss) || $decoded->iss !== $expectedIssuer) {
+            throw new RuntimeException("Invalid token issuer: '{$decoded->iss}', expected '{$expectedIssuer}'.", 401);
+        }
+
+        // Validate aud = authenticated
+        if (!isset($decoded->aud) || $decoded->aud !== 'authenticated') {
+            $audString = is_array($decoded->aud ?? null) ? implode(',', $decoded->aud) : (string) ($decoded->aud ?? '');
+            if ($audString !== 'authenticated') {
+                throw new RuntimeException("Invalid token audience: '{$audString}', expected 'authenticated'.", 401);
+            }
+        }
+
+        // Query public.profiles using validated sub (user_id)
         $profile = Profile::where('id', $userId)->first();
 
         if (!$profile || $profile->role !== 'admin') {

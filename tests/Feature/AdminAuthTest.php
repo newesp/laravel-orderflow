@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Profile;
 use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -52,7 +53,7 @@ class AdminAuthTest extends TestCase
         $response->assertStatus(401);
     }
 
-    public function test_valid_supabase_admin_token_allows_access(): void
+    public function test_valid_supabase_admin_token_allows_access_and_caches_jwks(): void
     {
         Http::fake([
             'https://test-project.supabase.co/auth/v1/.well-known/jwks.json' => Http::response($this->jwks, 200),
@@ -84,6 +85,69 @@ class AdminAuthTest extends TestCase
         $response->assertJsonPath('success', true);
         $response->assertJsonPath('data.id', $adminUserId);
         $response->assertJsonPath('data.is_demo', false);
+
+        // Verify JWKS is cached in Laravel Cache
+        $this->assertTrue(Cache::has('supabase_jwks_keyset'));
+    }
+
+    public function test_supabase_token_with_invalid_issuer_is_rejected(): void
+    {
+        Http::fake([
+            'https://test-project.supabase.co/auth/v1/.well-known/jwks.json' => Http::response($this->jwks, 200),
+        ]);
+
+        $adminUserId = (string) Str::uuid();
+        Profile::create([
+            'id' => $adminUserId,
+            'display_name' => 'Alice SSO Admin',
+            'role' => 'admin',
+        ]);
+
+        $payload = [
+            'sub' => $adminUserId,
+            'email' => 'alice@example.com',
+            'aud' => 'authenticated',
+            'iss' => 'https://evil-issuer.com/auth/v1', // Invalid issuer
+            'exp' => time() + 3600,
+        ];
+
+        $token = JWT::encode($payload, $this->privateKeyPem, 'RS256', 'test-jwk-1');
+
+        $response = $this->postJson('/api/admin/login', [
+            'access_token' => $token,
+        ]);
+
+        $response->assertStatus(401);
+    }
+
+    public function test_supabase_token_with_invalid_audience_is_rejected(): void
+    {
+        Http::fake([
+            'https://test-project.supabase.co/auth/v1/.well-known/jwks.json' => Http::response($this->jwks, 200),
+        ]);
+
+        $adminUserId = (string) Str::uuid();
+        Profile::create([
+            'id' => $adminUserId,
+            'display_name' => 'Alice SSO Admin',
+            'role' => 'admin',
+        ]);
+
+        $payload = [
+            'sub' => $adminUserId,
+            'email' => 'alice@example.com',
+            'aud' => 'untrusted-audience', // Invalid audience
+            'iss' => 'https://test-project.supabase.co/auth/v1',
+            'exp' => time() + 3600,
+        ];
+
+        $token = JWT::encode($payload, $this->privateKeyPem, 'RS256', 'test-jwk-1');
+
+        $response = $this->postJson('/api/admin/login', [
+            'access_token' => $token,
+        ]);
+
+        $response->assertStatus(401);
     }
 
     public function test_supabase_customer_token_returns_403_forbidden(): void
@@ -126,6 +190,8 @@ class AdminAuthTest extends TestCase
 
         $payload = [
             'sub' => (string) Str::uuid(),
+            'iss' => 'https://test-project.supabase.co/auth/v1',
+            'aud' => 'authenticated',
             'exp' => time() - 3600, // Expired
         ];
 
