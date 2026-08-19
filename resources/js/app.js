@@ -24,14 +24,22 @@ export function setButtonLoading(button) {
     button.dataset.isLoading = 'true';
     button.dataset.originalHtml = button.innerHTML;
     button.dataset.originalDisabled = button.disabled ? 'true' : 'false';
+    // Backup original display classes if we are going to modify them
+    button.dataset.addedFlex = 'false';
 
     // Disable button to prevent duplicate clicks
     button.disabled = true;
     button.classList.add('opacity-75', 'cursor-not-allowed');
 
+    // Ensure button content sits inline properly
+    if (!button.classList.contains('flex') && !button.classList.contains('inline-flex')) {
+        button.classList.add('inline-flex', 'items-center', 'justify-center');
+        button.dataset.addedFlex = 'true';
+    }
+
     // Create and prepend spinner element
     const spinner = document.createElement('span');
-    spinner.className = 'inline-flex items-center justify-center mr-2 button-spinner flex-shrink-0';
+    spinner.className = 'inline-block align-middle mr-2 button-spinner flex-shrink-0';
     spinner.innerHTML = SPINNER_SVG;
 
     button.prepend(spinner);
@@ -52,9 +60,14 @@ export function resetButtonLoading(button) {
     button.disabled = button.dataset.originalDisabled === 'true';
     button.classList.remove('opacity-75', 'cursor-not-allowed');
 
+    if (button.dataset.addedFlex === 'true') {
+        button.classList.remove('inline-flex', 'items-center', 'justify-center');
+    }
+
     delete button.dataset.isLoading;
     delete button.dataset.originalHtml;
     delete button.dataset.originalDisabled;
+    delete button.dataset.addedFlex;
 }
 
 /**
