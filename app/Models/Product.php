@@ -69,7 +69,13 @@ class Product extends Model
             },
             set: function ($value) {
                 if (is_array($value)) {
-                    return json_encode(array_values($value));
+                    if (empty($value)) {
+                        return '{}';
+                    }
+                    $escaped = array_map(function ($item) {
+                        return '"' . str_replace('"', '\\"', $item) . '"';
+                    }, array_values($value));
+                    return '{' . implode(',', $escaped) . '}';
                 }
                 return $value;
             }

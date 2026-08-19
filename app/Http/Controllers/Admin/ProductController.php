@@ -52,31 +52,35 @@ class ProductController extends Controller
         return view('admin.products.create');
     }
 
-    public function store(StoreProductRequest $request): RedirectResponse
+    public function store(StoreProductRequest $request)
     {
-        $data = $request->validated();
+        try {
+            $data = $request->validated();
 
-        $imagePaths = [];
-        if (!empty($data['image_url'])) {
-            $imagePaths[] = trim($data['image_url']);
-        } elseif (!empty($data['image_paths'])) {
-            $imagePaths = $data['image_paths'];
+            $imagePaths = [];
+            if (!empty($data['image_url'])) {
+                $imagePaths[] = trim($data['image_url']);
+            } elseif (!empty($data['image_paths'])) {
+                $imagePaths = $data['image_paths'];
+            }
+
+            $product = Product::create([
+                'name' => $data['name'],
+                'slug' => $data['slug'],
+                'description' => $data['description'] ?? '',
+                'price' => (int) $data['price'],
+                'image_paths' => $imagePaths,
+                'featured' => $request->boolean('featured'),
+                'active' => $request->boolean('active', true),
+                'is_digital' => $request->boolean('is_digital'),
+                'digital_file_path' => $data['digital_file_path'] ?? null,
+            ]);
+
+            return redirect()->route('admin.products.index')
+                ->with('success', "Product '{$product->name}' created successfully.");
+        } catch (\Throwable $e) {
+            return response($e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n\n" . $e->getTraceAsString(), 500);
         }
-
-        $product = Product::create([
-            'name' => $data['name'],
-            'slug' => $data['slug'],
-            'description' => $data['description'] ?? '',
-            'price' => (int) $data['price'],
-            'image_paths' => $imagePaths,
-            'featured' => $request->boolean('featured'),
-            'active' => $request->boolean('active', true),
-            'is_digital' => $request->boolean('is_digital'),
-            'digital_file_path' => $data['digital_file_path'] ?? null,
-        ]);
-
-        return redirect()->route('admin.products.index')
-            ->with('success', "Product '{$product->name}' created successfully.");
     }
 
     public function edit(Product $product): View
