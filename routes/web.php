@@ -25,6 +25,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Protected Admin Routes
     Route::middleware('auth:admin')->group(function () {
+        Route::get('/run-migrations', function () {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            return '<pre>' . \Illuminate\Support\Facades\Artisan::output() . '</pre>';
+        });
+
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
         // Products
