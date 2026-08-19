@@ -15,7 +15,7 @@ class AdminAuthService
 
     public function isDemoEnabled(): bool
     {
-        return filter_var(env('DEMO_ADMIN_ENABLED', false), FILTER_VALIDATE_BOOLEAN);
+        return config('admin.demo.enabled');
     }
 
     public function attemptDemoLogin(string $email, string $password): ?AdminSessionUser
@@ -24,8 +24,8 @@ class AdminAuthService
             return null;
         }
 
-        $expectedEmail = (string) env('DEMO_ADMIN_EMAIL', '');
-        $expectedPassword = (string) env('DEMO_ADMIN_PASSWORD', '');
+        $expectedEmail = (string) config('admin.demo.email');
+        $expectedPassword = (string) config('admin.demo.password');
 
         if (empty($expectedEmail) || empty($expectedPassword)) {
             return null;

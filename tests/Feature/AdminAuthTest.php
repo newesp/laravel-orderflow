@@ -35,8 +35,8 @@ class AdminAuthTest extends TestCase
     {
         parent::setUp();
 
-        putenv('SUPABASE_URL=https://test-project.supabase.co');
-        putenv('SUPABASE_ANON_KEY=test-anon-key');
+        config(['services.supabase.url' => 'https://test-project.supabase.co']);
+        config(['services.supabase.anon_key' => 'test-anon-key']);
     }
 
     public function test_guest_is_redirected_to_login_when_accessing_admin(): void
@@ -206,9 +206,9 @@ class AdminAuthTest extends TestCase
 
     public function test_demo_admin_login_with_valid_env_credentials(): void
     {
-        putenv('DEMO_ADMIN_ENABLED=true');
-        putenv('DEMO_ADMIN_EMAIL=eval@example.com');
-        putenv('DEMO_ADMIN_PASSWORD=secret-eval-pass');
+        config(['admin.demo.enabled' => true]);
+        config(['admin.demo.email' => 'eval@example.com']);
+        config(['admin.demo.password' => 'secret-eval-pass']);
 
         $response = $this->post('/admin/login', [
             'email' => 'eval@example.com',
@@ -222,9 +222,9 @@ class AdminAuthTest extends TestCase
 
     public function test_demo_admin_login_fails_with_wrong_password(): void
     {
-        putenv('DEMO_ADMIN_ENABLED=true');
-        putenv('DEMO_ADMIN_EMAIL=eval@example.com');
-        putenv('DEMO_ADMIN_PASSWORD=secret-eval-pass');
+        config(['admin.demo.enabled' => true]);
+        config(['admin.demo.email' => 'eval@example.com']);
+        config(['admin.demo.password' => 'secret-eval-pass']);
 
         $response = $this->post('/admin/login', [
             'email' => 'eval@example.com',
@@ -237,9 +237,9 @@ class AdminAuthTest extends TestCase
 
     public function test_demo_login_fails_when_demo_disabled(): void
     {
-        putenv('DEMO_ADMIN_ENABLED=false');
-        putenv('DEMO_ADMIN_EMAIL=eval@example.com');
-        putenv('DEMO_ADMIN_PASSWORD=secret-eval-pass');
+        config(['admin.demo.enabled' => false]);
+        config(['admin.demo.email' => 'eval@example.com']);
+        config(['admin.demo.password' => 'secret-eval-pass']);
 
         $response = $this->post('/admin/login', [
             'email' => 'eval@example.com',

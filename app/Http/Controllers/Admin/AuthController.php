@@ -25,7 +25,7 @@ class AuthController extends Controller
         }
 
         $demoEnabled = $this->adminAuthService->isDemoEnabled();
-        $demoEmail = $demoEnabled ? (string) env('DEMO_ADMIN_EMAIL', '') : '';
+        $demoEmail = $demoEnabled ? (string) config('admin.demo.email') : '';
 
         return view('admin.auth.login', compact('demoEnabled', 'demoEmail'));
     }
