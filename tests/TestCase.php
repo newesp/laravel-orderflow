@@ -11,11 +11,11 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        TestDatabaseBootstrapper::bootstrap();
+        // TestDatabaseBootstrapper::bootstrap();
     }
 
     protected function beforeRefreshingDatabase()
     {
-        TestDatabaseBootstrapper::bootstrap();
+        // TestDatabaseBootstrapper::bootstrap();
     }
 }
