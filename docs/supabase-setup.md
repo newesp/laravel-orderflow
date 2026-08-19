@@ -252,12 +252,16 @@ CREATE INDEX IF NOT EXISTS idx_integration_logs_event ON public.integration_logs
 To host product images and digital assets:
 
 1. In Supabase Dashboard, go to **Storage** -> **Buckets**.
-2. Click **New Bucket**:
-   - Name: `products`
-   - Public bucket: **Enabled (Checked)**
-3. (Optional) Set up Storage Access Policies:
-   - Read: `Public` (Allow all `SELECT` queries).
-   - Write/Upload: Authenticated users / Admins.
+2. Create the following buckets:
+   - **`product-images`**:
+     - Public bucket: **Enabled (Checked)**
+     - Used for product cover and display images.
+   - **`product-files`**:
+     - Public bucket: **Disabled (Unchecked)** or Enabled depending on your distribution model.
+     - Used for downloadable digital product files (`.pdf`, `.zip`, `.rar`).
+3. **Storage Access Policies & Service Role Key**:
+   - OrderFlow Lite's Laravel backend proxies image and digital file uploads directly to Supabase Storage.
+   - Setting the **`SUPABASE_SERVICE_ROLE_KEY`** in your environment variables allows the backend to bypass Row-Level Security (RLS) policies and upload files smoothly for both formal administrators and demo evaluation sessions.
 
 ---
 
@@ -287,9 +291,10 @@ DB_USERNAME=postgres.YOUR_PROJECT_REF
 DB_PASSWORD=YOUR_DB_PASSWORD
 DB_SSLMODE=require
 
-# Supabase Auth Configuration (JWKS SSO)
+# Supabase Configuration (JWKS SSO & Storage Uploads)
 SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY # Required for backend Storage uploads
 
 # Demo Admin Evaluation Mode (Optional)
 DEMO_ADMIN_ENABLED=true
@@ -319,3 +324,8 @@ DEMO_WEBHOOK_URL=https://webhook.site/your-unique-uuid
 ### Q4: Google OAuth redirects to an error or wrong URL
 *   **Cause**: The redirect URL is not listed under **Authentication -> URL Configuration -> Redirect URLs**.
 *   **Solution**: Add your exact domain callback (e.g. `https://your-domain.vercel.app/admin/login`) to the Redirect URLs list.
+
+### Q5: Failed to upload image/file: `403 Forbidden: new row violates row-level security policy`
+*   **Cause**: The upload request failed Supabase Storage Row-Level Security (RLS) policies because it used the anonymous key or lacked an admin JWT.
+*   **Solution**: Add `SUPABASE_SERVICE_ROLE_KEY` to your local `.env` and Vercel Environment Variables. The backend will automatically use the Service Role Key to bypass RLS for administrative uploads.
+
