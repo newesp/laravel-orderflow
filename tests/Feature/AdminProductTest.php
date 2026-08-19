@@ -205,4 +205,49 @@ class AdminProductTest extends TestCase
         $deleteRes->assertStatus(200);
         $this->assertDatabaseMissing('products', ['id' => $productId]);
     }
+
+    public function test_admin_can_upload_product_image(): void
+    {
+        \Illuminate\Support\Facades\Http::fake([
+            '*/storage/v1/object/product-images/*' => \Illuminate\Support\Facades\Http::response([], 200),
+        ]);
+        \Illuminate\Support\Facades\Storage::fake('public');
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('test-product.png', 100, 'image/png');
+
+        $response = $this->actingAs($this->admin, 'admin')->postJson('/admin/products/upload-image', [
+            'image' => $file,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'url',
+            'path',
+            'file_name',
+        ]);
+        $this->assertTrue($response->json('success'));
+    }
+
+    public function test_admin_can_upload_digital_file(): void
+    {
+        \Illuminate\Support\Facades\Http::fake([
+            '*/storage/v1/object/product-files/*' => \Illuminate\Support\Facades\Http::response([], 200),
+        ]);
+        \Illuminate\Support\Facades\Storage::fake('local');
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('handbook.zip', 100, 'application/zip');
+
+        $response = $this->actingAs($this->admin, 'admin')->postJson('/admin/products/upload-file', [
+            'file' => $file,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'path',
+            'file_name',
+        ]);
+        $this->assertTrue($response->json('success'));
+    }
 }

@@ -124,4 +124,38 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')
             ->with('info', "Product '{$name}' has been deleted.");
     }
+
+    public function uploadImage(Request $request, \App\Services\SupabaseStorageService $storageService): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'image' => ['required', 'file', 'image', 'max:10240'],
+        ]);
+
+        try {
+            $result = $storageService->uploadProductImage($request->file('image'));
+            return response()->json($result);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function uploadFile(Request $request, \App\Services\SupabaseStorageService $storageService): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:pdf,zip,rar,gz,tar', 'max:51200'],
+        ]);
+
+        try {
+            $result = $storageService->uploadProductFile($request->file('file'));
+            return response()->json($result);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
