@@ -12,33 +12,39 @@ use Illuminate\View\View;
 
 class ProductController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request)
     {
-        $query = Product::query();
+        try {
+            $query = Product::query();
 
-        if ($search = $request->input('search')) {
-            $clean = strtolower(trim($search));
-            $query->where(function ($q) use ($clean) {
-                $q->whereRaw('LOWER(name) LIKE ?', ["%{$clean}%"])
-                  ->orWhereRaw('LOWER(slug) LIKE ?', ["%{$clean}%"]);
-            });
-        }
-
-        if ($status = $request->input('status')) {
-            if ($status === 'active') {
-                $query->where('active', true);
-            } elseif ($status === 'inactive') {
-                $query->where('active', false);
-            } elseif ($status === 'featured') {
-                $query->where('featured', true);
-            } elseif ($status === 'digital') {
-                $query->where('is_digital', true);
+            if ($search = $request->input('search')) {
+                $clean = strtolower(trim($search));
+                $query->where(function ($q) use ($clean) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$clean}%"])
+                      ->orWhereRaw('LOWER(slug) LIKE ?', ["%{$clean}%"]);
+                });
             }
+
+            if ($status = $request->input('status')) {
+                if ($status === 'active') {
+                    $query->where('active', true);
+                } elseif ($status === 'inactive') {
+                    $query->where('active', false);
+                } elseif ($status === 'featured') {
+                    $query->where('featured', true);
+                } elseif ($status === 'digital') {
+                    $query->where('is_digital', true);
+                }
+            }
+
+            $products = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+            
+            // Force view rendering to catch any blade/model exceptions
+            $html = view('admin.products.index', compact('products'))->render();
+            return response($html);
+        } catch (\Throwable $e) {
+            return response($e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n\n" . $e->getTraceAsString(), 500);
         }
-
-        $products = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
-
-        return view('admin.products.index', compact('products'));
     }
 
     public function create(): View

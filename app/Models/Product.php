@@ -78,7 +78,7 @@ class Product extends Model
 
     public function getFormattedPriceAttribute(): string
     {
-        return 'NT$ ' . number_format($this->price);
+        return 'NT$ ' . number_format((float) $this->price);
     }
 
     public function orderItems(): HasMany
