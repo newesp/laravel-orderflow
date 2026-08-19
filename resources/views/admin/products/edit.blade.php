@@ -27,7 +27,7 @@
 
     <!-- Form Card -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-xs p-6 sm:p-8">
-        <form method="POST" action="{{ route('admin.products.update', $product) }}" class="space-y-6">
+        <form id="product_form" method="POST" action="{{ route('admin.products.update', $product) }}" class="space-y-6">
             @csrf
             @method('PUT')
 
@@ -211,7 +211,7 @@
                 <a href="{{ route('admin.products.index') }}" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
                     Cancel
                 </a>
-                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition">
+                <button type="submit" id="submit_btn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed">
                     Update Product
                 </button>
             </div>
@@ -221,6 +221,19 @@
 </div>
 
 <script>
+    let activeUploads = 0;
+    const submitBtn = document.getElementById('submit_btn');
+
+    function updateSubmitButtonState() {
+        if (activeUploads > 0) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
     function toggleDigitalSection() {
         const isDigital = document.getElementById('is_digital').checked;
         const digitalFields = document.getElementById('digital_fields');
@@ -230,6 +243,24 @@
             digitalFields.classList.add('hidden');
         }
     }
+
+    // --- Form Submission Logic ---
+    const productForm = document.getElementById('product_form');
+    productForm.addEventListener('submit', function(e) {
+        if (activeUploads > 0) {
+            e.preventDefault();
+            alert('Please wait for file uploads to complete before submitting.');
+            return false;
+        }
+
+        const priceInput = document.getElementById('price');
+        if (parseInt(priceInput.value) === 0) {
+            if (!confirm('Price is set to 0. Are you sure you want to update this to a free product?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
 
     // --- Product Image Upload Logic ---
     const imageInput = document.getElementById('product_image_file_input');
@@ -268,6 +299,8 @@
             return;
         }
         imageError.classList.add('hidden');
+        activeUploads++;
+        updateSubmitButtonState();
 
         // Loading state
         imageIconWrapper.innerHTML = `
@@ -323,6 +356,8 @@
             `;
             imageDropzone.classList.remove('opacity-75', 'cursor-wait');
             imageInput.value = '';
+            activeUploads--;
+            updateSubmitButtonState();
         });
     }
 
@@ -375,6 +410,8 @@
 
     function uploadDigitalProductFile(file) {
         digitalFileError.classList.add('hidden');
+        activeUploads++;
+        updateSubmitButtonState();
 
         digitalFileIconWrapper.innerHTML = `
             <svg class="animate-spin w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24">
@@ -431,6 +468,8 @@
             `;
             digitalFileDropzone.classList.remove('opacity-75', 'cursor-wait');
             digitalFileInput.value = '';
+            activeUploads--;
+            updateSubmitButtonState();
         });
     }
 
