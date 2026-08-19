@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\AdminUser;
+use App\Models\AdminSessionUser;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -15,7 +15,7 @@ class AdminOrderTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected AdminUser $admin;
+    protected AdminSessionUser $admin;
     protected Profile $customer;
     protected Product $product;
 
@@ -23,11 +23,13 @@ class AdminOrderTest extends TestCase
     {
         parent::setUp();
 
-        $this->admin = AdminUser::create([
-            'name' => 'Demo Admin',
-            'email' => 'demo@example.com',
-            'password' => 'demo1234',
-        ]);
+        $this->admin = new AdminSessionUser(
+            id: (string) Str::uuid(),
+            email: 'admin@example.com',
+            name: 'Order Manager',
+            role: 'admin',
+            is_demo: false
+        );
 
         $this->customer = Profile::create([
             'id' => (string) Str::uuid(),

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\IntegrationLogController;
+use App\Http\Middleware\EnsureNonDemoAdmin;
 
 Route::get('/', function () {
     return redirect()->route('admin.dashboard');
@@ -17,6 +18,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest:admin')->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+        Route::post('/login/supabase', [AuthController::class, 'loginWithSupabase'])->name('login.supabase');
     });
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth:admin');
@@ -33,7 +35,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
             Route::put('/{product}', [ProductController::class, 'update'])->name('update');
             Route::patch('/{product}/toggle-active', [ProductController::class, 'toggleActive'])->name('toggle-active');
-            Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+            Route::delete('/{product}', [ProductController::class, 'destroy'])
+                ->name('destroy')
+                ->middleware(EnsureNonDemoAdmin::class);
         });
 
         // Customers

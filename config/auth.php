@@ -1,8 +1,5 @@
 <?php
 
-use App\Models\User;
-use App\Models\AdminUser;
-
 return [
 
     /*
@@ -25,11 +22,11 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'admin_session_provider',
         ],
         'admin' => [
             'driver' => 'session',
-            'provider' => 'admin_users',
+            'provider' => 'admin_session_provider',
         ],
     ],
 
@@ -40,13 +37,8 @@ return [
     */
 
     'providers' => [
-        'users' => [
-            'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
-        ],
-        'admin_users' => [
-            'driver' => 'eloquent',
-            'model' => AdminUser::class,
+        'admin_session_provider' => [
+            'driver' => 'admin_session',
         ],
     ],
 
@@ -58,7 +50,7 @@ return [
 
     'passwords' => [
         'users' => [
-            'provider' => 'users',
+            'provider' => 'admin_session_provider',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,

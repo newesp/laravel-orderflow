@@ -22,9 +22,9 @@ _Avoid_: Merchandise, good, catalog item, SKU
 A read-only presentation concept aggregated from `auth.users` and `public.profiles` via `public.admin_customer_view`, linked to orders and cumulative purchase history via `orders.user_id`.
 _Avoid_: Client, buyer, account, user
 
-**AdminUser**:
-A dedicated backend administrative user account in `public.admin_users` used for authenticating operators and demo accounts into the Laravel Admin panel.
-_Avoid_: User, member, profile
+**AdminSessionUser**:
+A non-persistent, session-backed authenticated administrative identity supporting both formal Supabase SSO Administrators (validated against Supabase JWKS and `public.profiles.role = 'admin'`) and evaluation Demo Administrators (validated against server environment variables).
+_Avoid_: AdminUser, DB user, persistent admin, stateless
 
 **IntegrationLog**:
 An execution log tracking admin-initiated domain events, external webhook dispatches, payloads, response payloads, and delivery status.

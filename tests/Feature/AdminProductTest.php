@@ -2,26 +2,29 @@
 
 namespace Tests\Feature;
 
-use App\Models\AdminUser;
+use App\Models\AdminSessionUser;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class AdminProductTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected AdminUser $admin;
+    protected AdminSessionUser $admin;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->admin = AdminUser::create([
-            'name' => 'Demo Admin',
-            'email' => 'demo@example.com',
-            'password' => 'demo1234',
-        ]);
+        $this->admin = new AdminSessionUser(
+            id: (string) Str::uuid(),
+            email: 'admin@example.com',
+            name: 'Product Manager',
+            role: 'admin',
+            is_demo: false
+        );
     }
 
     public function test_admin_can_view_products_list(): void

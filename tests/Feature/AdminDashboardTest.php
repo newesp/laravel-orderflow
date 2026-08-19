@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\AdminUser;
+use App\Models\AdminSessionUser;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Profile;
@@ -23,11 +23,13 @@ class AdminDashboardTest extends TestCase
 
     public function test_admin_can_access_dashboard_with_aggregated_metrics(): void
     {
-        $admin = AdminUser::create([
-            'name' => 'Demo Admin',
-            'email' => 'demo@example.com',
-            'password' => 'demo1234',
-        ]);
+        $admin = new AdminSessionUser(
+            id: (string) Str::uuid(),
+            email: 'admin@example.com',
+            name: 'Dashboard Admin',
+            role: 'admin',
+            is_demo: false
+        );
 
         Product::create([
             'name' => 'Test Item 1',
@@ -65,7 +67,7 @@ class AdminDashboardTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Executive Dashboard');
-        $response->assertSee('NT$ 3,000'); // Completed revenue
+        $response->assertSee('NT$ 3,000');
         $response->assertSee('Customer Bob');
     }
 }

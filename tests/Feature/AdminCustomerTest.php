@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\AdminUser;
+use App\Models\AdminSessionUser;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -16,17 +16,19 @@ class AdminCustomerTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected AdminUser $admin;
+    protected AdminSessionUser $admin;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->admin = AdminUser::create([
-            'name' => 'Demo Admin',
-            'email' => 'demo@example.com',
-            'password' => 'demo1234',
-        ]);
+        $this->admin = new AdminSessionUser(
+            id: (string) Str::uuid(),
+            email: 'admin@example.com',
+            name: 'Customer Manager',
+            role: 'admin',
+            is_demo: false
+        );
     }
 
     public function test_admin_can_view_customers_list(): void
@@ -111,7 +113,7 @@ class AdminCustomerTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Alice VIP');
-        $response->assertSee('NT$ 5,000'); // Completed spend
+        $response->assertSee('NT$ 5,000');
         $response->assertSee('Premium Headset');
     }
 

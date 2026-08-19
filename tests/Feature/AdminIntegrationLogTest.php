@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\AdminUser;
+use App\Models\AdminSessionUser;
 use App\Models\IntegrationLog;
 use App\Models\Order;
 use App\Models\Profile;
@@ -16,18 +16,20 @@ class AdminIntegrationLogTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected AdminUser $admin;
+    protected AdminSessionUser $admin;
     protected Profile $customer;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->admin = AdminUser::create([
-            'name' => 'Demo Admin',
-            'email' => 'demo@example.com',
-            'password' => 'demo1234',
-        ]);
+        $this->admin = new AdminSessionUser(
+            id: (string) Str::uuid(),
+            email: 'admin@example.com',
+            name: 'Audit Admin',
+            role: 'admin',
+            is_demo: false
+        );
 
         $this->customer = Profile::create([
             'id' => (string) Str::uuid(),
@@ -95,7 +97,6 @@ class AdminIntegrationLogTest extends TestCase
         ]);
 
         $service = app(OrderStatusService::class);
-        // Order transition should still succeed even if webhook fails
         $updatedOrder = $service->transition($order, 'processing');
 
         $this->assertSame('processing', $updatedOrder->status);

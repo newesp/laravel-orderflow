@@ -10,6 +10,32 @@ jobs:
   laravel-tests:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: testing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: testing
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+      DB_SSLMODE: disable
+      SUPABASE_URL: https://test-project.supabase.co
+      SUPABASE_ANON_KEY: test-anon-key
+
     steps:
     - uses: actions/checkout@v4
 
@@ -17,7 +43,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_sqlite, sqlite3, pdo_pgsql, pgsql, fileinfo, zip
+        extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_pgsql, pgsql, fileinfo, zip
         coverage: none
 
     - name: Setup Node.js
@@ -42,5 +68,5 @@ jobs:
     - name: Directory Permissions
       run: chmod -R 777 storage bootstrap/cache
 
-    - name: Execute Tests via PHPUnit
+    - name: Execute Tests via PHPUnit on PostgreSQL
       run: vendor/bin/phpunit
