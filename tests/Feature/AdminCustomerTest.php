@@ -99,7 +99,6 @@ class AdminCustomerTest extends TestCase
             'product_name' => 'Premium Headset',
             'unit_price' => 5000,
             'quantity' => 1,
-            'line_total' => 5000,
         ]);
 
         $order2 = Order::create([

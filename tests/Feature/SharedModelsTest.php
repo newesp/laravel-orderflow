@@ -64,7 +64,6 @@ class SharedModelsTest extends TestCase
             'product_name' => 'Mechanical Keyboard',
             'unit_price' => 2800,
             'quantity' => 2,
-            'line_total' => 5600,
         ]);
 
         $this->assertTrue(Str::isUuid($order->id));
@@ -73,5 +72,33 @@ class SharedModelsTest extends TestCase
         $this->assertSame($product->id, $order->orderItems->first()->product_id);
         $this->assertSame('NT$ 2,800', $item->formatted_unit_price);
         $this->assertSame('NT$ 5,600', $item->formatted_line_total);
+    }
+
+    public function test_order_item_line_total_is_generated_by_database(): void
+    {
+        $userId = (string) Str::uuid();
+        $profile = Profile::create([
+            'id' => $userId,
+            'display_name' => 'Tester',
+            'role' => 'customer',
+        ]);
+
+        $order = Order::create([
+            'user_id' => $profile->id,
+            'status' => 'pending',
+            'total' => 0,
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('order_items')->insert([
+            'order_id' => $order->id,
+            'product_id' => null,
+            'product_name' => 'Raw Item',
+            'unit_price' => 1500,
+            'quantity' => 3,
+        ]);
+
+        $item = \Illuminate\Support\Facades\DB::table('order_items')->where('order_id', $order->id)->first();
+        
+        $this->assertSame(4500, (int) $item->line_total);
     }
 }

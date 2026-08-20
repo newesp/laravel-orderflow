@@ -79,9 +79,7 @@ class TestDatabaseBootstrapper
                     product_name VARCHAR(255) NOT NULL,
                     unit_price INTEGER NOT NULL DEFAULT 0,
                     quantity INTEGER NOT NULL DEFAULT 1,
-                    line_total INTEGER NOT NULL DEFAULT 0,
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    line_total INTEGER GENERATED ALWAYS AS (unit_price * quantity) STORED
                 );
             ');
         } else {
@@ -129,8 +127,7 @@ class TestDatabaseBootstrapper
                     $table->string('product_name');
                     $table->integer('unit_price')->default(0);
                     $table->integer('quantity')->default(1);
-                    $table->integer('line_total')->default(0);
-                    $table->timestamps();
+                    $table->integer('line_total')->storedAs('unit_price * quantity');
                 });
             }
         }

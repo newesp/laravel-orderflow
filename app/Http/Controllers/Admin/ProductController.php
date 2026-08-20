@@ -43,7 +43,8 @@ class ProductController extends Controller
             $html = view('admin.products.index', compact('products'))->render();
             return response($html);
         } catch (\Throwable $e) {
-            return response($e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n\n" . $e->getTraceAsString(), 500);
+            \Illuminate\Support\Facades\Log::error($e);
+            return response('Internal Server Error', 500);
         }
     }
 
@@ -79,7 +80,8 @@ class ProductController extends Controller
             return redirect()->route('admin.products.index')
                 ->with('success', "Product '{$product->name}' created successfully.");
         } catch (\Throwable $e) {
-            return response($e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n\n" . $e->getTraceAsString(), 500);
+            \Illuminate\Support\Facades\Log::error($e);
+            return response('Internal Server Error', 500);
         }
     }
 
@@ -145,9 +147,10 @@ class ProductController extends Controller
             $result = $storageService->uploadProductImage($request->file('image'));
             return response()->json($result);
         } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error($e);
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Internal Server Error',
             ], 500);
         }
     }
@@ -162,9 +165,10 @@ class ProductController extends Controller
             $result = $storageService->uploadProductFile($request->file('file'));
             return response()->json($result);
         } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error($e);
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Internal Server Error',
             ], 500);
         }
     }

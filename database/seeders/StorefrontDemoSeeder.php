@@ -134,7 +134,6 @@ class StorefrontDemoSeeder extends Seeder
                 'product_name' => $createdProducts[0]->name,
                 'unit_price' => $createdProducts[0]->price,
                 'quantity' => 1,
-                'line_total' => 5500,
             ]);
 
             OrderItem::create([
@@ -143,7 +142,6 @@ class StorefrontDemoSeeder extends Seeder
                 'product_name' => $createdProducts[1]->name,
                 'unit_price' => $createdProducts[1]->price,
                 'quantity' => 1,
-                'line_total' => 2800,
             ]);
         }
     }
