@@ -2,8 +2,9 @@
 
 namespace Tests;
 
+use App\Models\Profile;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
-use Tests\Support\TestDatabaseBootstrapper;
+use Illuminate\Support\Facades\DB;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -11,11 +12,18 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        // TestDatabaseBootstrapper::bootstrap();
+        Profile::creating(function ($profile) {
+            if (DB::getDriverName() !== 'pgsql') return;
+            DB::table('auth.users')->insertOrIgnore([
+                'id' => $profile->id,
+                'email' => $profile->id . '@example.com',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
     }
 
     protected function beforeRefreshingDatabase()
     {
-        // TestDatabaseBootstrapper::bootstrap();
     }
 }
