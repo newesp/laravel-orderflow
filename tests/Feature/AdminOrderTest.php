@@ -135,6 +135,43 @@ class AdminOrderTest extends TestCase
         $this->assertSame('cancelled', $order->fresh()->status);
     }
 
+    public function test_admin_can_cancel_processing_order(): void
+    {
+        $order = Order::create([
+            'user_id' => $this->customer->id,
+            'status' => 'processing',
+            'total' => 2500,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->patch("/admin/orders/{$order->id}/status", ['status' => 'cancelled']);
+
+        $response->assertRedirect();
+        $this->assertSame('cancelled', $order->fresh()->status);
+    }
+
+    public function test_customer_total_spent_does_not_drop_when_order_received(): void
+    {
+        $order = Order::create([
+            'user_id' => $this->customer->id,
+            'status' => 'processing',
+            'total' => 2500,
+        ]);
+
+        $customer = \App\Models\Customer::find($this->customer->id);
+        $this->assertSame(2500, $customer->total_spent);
+
+        $order->update(['status' => 'received']);
+
+        $customer = \App\Models\Customer::find($this->customer->id);
+        $this->assertSame(2500, $customer->total_spent);
+        
+        $order->update(['status' => 'completed']);
+        
+        $customer = \App\Models\Customer::find($this->customer->id);
+        $this->assertSame(2500, $customer->total_spent);
+    }
+
     public function test_admin_cannot_make_illegal_transitions(): void
     {
         $order = Order::create([
