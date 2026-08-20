@@ -22,7 +22,7 @@ class PostgresSchemaComplianceTest extends TestCase
         
         $hasProfileToUserFk = false;
         foreach ($profilesFks as $fk) {
-            if (in_array('id', $fk['columns']) && $fk['foreign_table'] === 'users' && in_array('id', $fk['foreign_columns'])) {
+            if (in_array('id', $fk['columns']) && $fk['foreign_schema'] === 'auth' && $fk['foreign_table'] === 'users' && in_array('id', $fk['foreign_columns'])) {
                 $hasProfileToUserFk = true;
                 $this->assertEquals('cascade', strtolower($fk['on_delete']));
             }
@@ -34,7 +34,7 @@ class PostgresSchemaComplianceTest extends TestCase
 
         $hasOrderToUserFk = false;
         foreach ($ordersFks as $fk) {
-            if (in_array('user_id', $fk['columns']) && $fk['foreign_table'] === 'users' && in_array('id', $fk['foreign_columns'])) {
+            if (in_array('user_id', $fk['columns']) && $fk['foreign_schema'] === 'auth' && $fk['foreign_table'] === 'users' && in_array('id', $fk['foreign_columns'])) {
                 $hasOrderToUserFk = true;
                 // PostgreSQL NO ACTION and RESTRICT might be reported similarly, but user asked for RESTRICT.
                 // We will just verify it's not CASCADE or SET NULL, or specifically check for restrict.
