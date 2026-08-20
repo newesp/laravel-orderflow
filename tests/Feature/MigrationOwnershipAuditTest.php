@@ -33,5 +33,8 @@ class MigrationOwnershipAuditTest extends TestCase
 
         // Laravel-owned tables are rolled back
         $this->assertFalse(Schema::hasTable('integration_logs'), 'integration_logs should be dropped on rollback');
+
+        // 5. Restore database state for subsequent tests
+        Artisan::call('migrate');
     }
 }
