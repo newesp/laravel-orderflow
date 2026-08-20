@@ -10,7 +10,7 @@
 
 Small e-commerce businesses operating with `modern-storefront` need a performant, reliable, and secure back-office web administration system to manage product listings, inspect customer profiles, audit orders, transition order lifecycle statuses, and monitor integration telemetry.
 
-Currently, administrative tasks in `modern-storefront` are partially handled via client-side React routes interacting directly with Supabase RLS. However, a dedicated server-side SaaS backend (built with PHP 8.3+ and Laravel 11) is required to provide server-side business workflows, robust data aggregation (such as customer lifetime value and order metrics), deterministic state machine transitions with business rule validation, demo login capabilities for prospective employers/evaluators, and integration webhook telemetry—all while safely sharing the existing Supabase PostgreSQL database without degrading storefront operations, changing storefront semantics, or exposing privileged credentials.
+Currently, administrative tasks in `modern-storefront` are partially handled via client-side React routes interacting directly with Supabase RLS. However, a dedicated server-side SaaS backend (built with PHP 8.3+ and Laravel 13) is required to provide server-side business workflows, robust data aggregation (such as customer lifetime value and order metrics), deterministic state machine transitions with business rule validation, demo login capabilities for prospective employers/evaluators, and integration webhook telemetry—all while safely sharing the existing Supabase PostgreSQL database without degrading storefront operations, changing storefront semantics, or exposing privileged credentials.
 
 ---
 
@@ -87,7 +87,7 @@ Key solution elements:
 - **Shared Schema Entities**:
   - `public.products`: Primary key `id` (UUID), `price` (integer), `image_paths` (text[]), `slug` (text unique), `is_digital` (boolean), `digital_file_path` (text nullable).
   - `public.orders`: Primary key `id` (UUID), `user_id` (UUID -> `auth.users`), `total` (integer), `status` (text check constraint).
-  - `public.order_items`: Primary key `id` (UUID), `order_id` (UUID), `product_id` (UUID nullable), `product_name` (text snapshot), `unit_price` (integer snapshot), `quantity` (integer), `line_total` (stored generated column).
+  - `public.order_items`: Primary key `id` (BIGSERIAL / bigint identity), `order_id` (UUID), `product_id` (UUID nullable), `product_name` (text snapshot), `unit_price` (integer snapshot), `quantity` (integer), `line_total` (stored generated column).
   - `public.profiles`: Primary key `id` (UUID -> `auth.users`), `display_name` (text), `role` (text).
   - `auth.users`: Supabase Auth identity table (`id`, `email`, `created_at`).
 - **Laravel-Managed Migrations**:
@@ -124,7 +124,7 @@ Key solution elements:
   - Blade controllers catch the exception to return user-friendly flash warning notifications.
 
 ### 4. Integration Telemetry & Event Pipeline
-- Order status changes and product updates dispatch internal Laravel events (`App\Events\OrderStatusChanged`).
+- Order status changes and product updates dispatch internal Laravel events (`App\Events\OrderStatusChanged` and `App\Events\ProductUpdated`).
 - Event listeners invoke `App\Services\IntegrationService` to write internal audit records to `public.integration_logs`.
 - For order status changes, if `DEMO_WEBHOOK_URL` is populated in the environment, the integration service additionally dispatches an asynchronous/synchronous HTTP POST request with a timeout. If the request fails, the integration log status is recorded as `failed` with the error trace, while preserving the committed database transaction. (Product updates only target internal-audit).
 
