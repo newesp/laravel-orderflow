@@ -11,7 +11,11 @@ class AdminCustomerApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Customer::query()->withCount('orders');
+        $query = Customer::query()
+            ->withCount('orders')
+            ->withSum(['orders as total_spent' => function ($query) {
+                $query->whereIn('status', ['processing', 'completed']);
+            }], 'total');
 
         if ($search = $request->input('search')) {
             $clean = strtolower(trim($search));
@@ -21,7 +25,7 @@ class AdminCustomerApiController extends Controller
             });
         }
 
-        $customers = $query->orderBy('created_at', 'desc')->paginate($request->integer('per_page', 15));
+        $customers = $query->orderBy('created_at', 'desc')->paginate($this->getPerPage($request));
 
         return response()->json([
             'success' => true,

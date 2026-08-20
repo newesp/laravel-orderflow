@@ -33,7 +33,7 @@ class AdminProductApiController extends Controller
             }
         }
 
-        $products = $query->orderBy('created_at', 'desc')->paginate($request->integer('per_page', 15));
+        $products = $query->orderBy('created_at', 'desc')->paginate($this->getPerPage($request));
 
         return response()->json([
             'success' => true,

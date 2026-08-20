@@ -133,4 +133,51 @@ class AdminCustomerTest extends TestCase
         $response->assertJsonPath('data.display_name', 'API Customer');
         $response->assertJsonPath('data.role', 'customer');
     }
+
+    public function test_customer_list_aggregates_correctly(): void
+    {
+        $user1 = (string) Str::uuid();
+        $user2 = (string) Str::uuid();
+
+        Profile::create([
+            'id' => $user1,
+            'display_name' => 'User With Orders',
+            'role' => 'customer',
+        ]);
+
+        Profile::create([
+            'id' => $user2,
+            'display_name' => 'User Without Orders',
+            'role' => 'customer',
+        ]);
+
+        Order::create([
+            'user_id' => $user1,
+            'status' => 'completed',
+            'total' => 1500,
+        ]);
+        Order::create([
+            'user_id' => $user1,
+            'status' => 'processing',
+            'total' => 2000,
+        ]);
+        Order::create([
+            'user_id' => $user1,
+            'status' => 'pending', // shouldn't be counted in total_spent
+            'total' => 3000,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->getJson('/api/admin/customers');
+
+        $response->assertStatus(200);
+
+        $data = collect($response->json('data.data'))->keyBy('id');
+
+        $this->assertEquals(3, $data[$user1]['orders_count']);
+        $this->assertEquals(3500, $data[$user1]['total_spent']);
+
+        $this->assertEquals(0, $data[$user2]['orders_count']);
+        $this->assertEquals(0, $data[$user2]['total_spent']);
+    }
 }

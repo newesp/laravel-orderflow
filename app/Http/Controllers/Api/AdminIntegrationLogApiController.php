@@ -30,7 +30,7 @@ class AdminIntegrationLogApiController extends Controller
             $query->where('event_type', $eventType);
         }
 
-        $logs = $query->orderBy('created_at', 'desc')->paginate($request->integer('per_page', 20));
+        $logs = $query->orderBy('created_at', 'desc')->paginate($this->getPerPage($request));
 
         return response()->json([
             'success' => true,
