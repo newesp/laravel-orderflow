@@ -59,7 +59,6 @@ class AdminOrderTest extends TestCase
             'product_name' => 'Wireless Keyboard',
             'unit_price' => 2500,
             'quantity' => 1,
-            'line_total' => 2500,
         ]);
 
         $response = $this->actingAs($this->admin, 'admin')->get('/admin/orders');
@@ -84,7 +83,6 @@ class AdminOrderTest extends TestCase
             'product_name' => 'Wireless Keyboard',
             'unit_price' => 2500,
             'quantity' => 2,
-            'line_total' => 5000,
         ]);
 
         $response = $this->actingAs($this->admin, 'admin')->get("/admin/orders/{$order->id}");
@@ -168,5 +166,27 @@ class AdminOrderTest extends TestCase
             'success' => false,
         ]);
         $response->assertJsonPath('message', "Cannot transition order status from 'completed' to 'processing'. This state change is not allowed by the order lifecycle rules.");
+    }
+
+    public function test_concurrent_status_transition_is_prevented(): void
+    {
+        $order = Order::create([
+            'user_id' => $this->customer->id,
+            'status' => 'pending',
+            'total' => 2500,
+        ]);
+
+        $service = app(\App\Services\OrderStatusService::class);
+
+        $staleOrder = Order::find($order->id);
+
+        // Simulate a concurrent request changing the status to a terminal state in the DB
+        Order::where('id', $order->id)->update(['status' => 'completed']);
+
+        // The service should fetch the fresh lock and reject the transition based on the actual DB state,
+        // not the stale object's state.
+        $this->expectException(\App\Exceptions\InvalidOrderStatusTransitionException::class);
+
+        $service->transition($staleOrder, 'processing');
     }
 }

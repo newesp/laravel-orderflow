@@ -5,9 +5,6 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.3"
-    },
-    "api/debug.php": {
-      "runtime": "vercel-php@0.7.3"
     }
   },
   "routes": [
@@ -18,10 +15,6 @@
     {
       "src": "/(favicon.ico|robots.txt)",
       "dest": "/$1"
-    },
-    {
-      "src": "/_debug",
-      "dest": "/api/debug.php"
     },
     {
       "src": "/(.*)",

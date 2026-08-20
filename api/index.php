@@ -53,19 +53,11 @@ try {
     $kernel->terminate($request, $response);
 
 } catch (\Throwable $e) {
-    // Raw error output for debugging — will show exact 500 cause
+    error_log((string)$e);
     http_response_code(500);
     header('Content-Type: application/json');
     echo json_encode([
         'error' => true,
-        'message' => $e->getMessage(),
-        'file' => $e->getFile() . ':' . $e->getLine(),
-        'trace' => array_slice(
-            array_map(
-                fn($t) => ($t['file'] ?? '?') . ':' . ($t['line'] ?? '?') . ' ' . ($t['class'] ?? '') . ($t['type'] ?? '') . ($t['function'] ?? ''),
-                $e->getTrace()
-            ),
-            0, 15
-        ),
-    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        'message' => 'Internal Server Error'
+    ]);
 }

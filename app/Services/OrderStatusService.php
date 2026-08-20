@@ -41,23 +41,27 @@ class OrderStatusService
      */
     public function transition(Order $order, string $newStatus): Order
     {
-        $currentStatus = $order->status;
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($order, $newStatus) {
+            $lockedOrder = Order::where('id', $order->id)->lockForUpdate()->first();
+            
+            $currentStatus = $lockedOrder->status;
 
-        if ($currentStatus === $newStatus) {
-            return $order;
-        }
+            if ($currentStatus === $newStatus) {
+                return $lockedOrder;
+            }
 
-        if (!$this->canTransition($currentStatus, $newStatus)) {
-            throw new InvalidOrderStatusTransitionException($currentStatus, $newStatus);
-        }
+            if (!$this->canTransition($currentStatus, $newStatus)) {
+                throw new InvalidOrderStatusTransitionException($currentStatus, $newStatus);
+            }
 
-        $order->update([
-            'status' => $newStatus,
-        ]);
+            $lockedOrder->update([
+                'status' => $newStatus,
+            ]);
 
-        // Dispatch domain event for logging and webhooks
-        event(new OrderStatusChanged($order, $currentStatus, $newStatus));
+            // Dispatch domain event for logging and webhooks
+            event(new OrderStatusChanged($lockedOrder, $currentStatus, $newStatus));
 
-        return $order;
+            return $lockedOrder;
+        });
     }
 }

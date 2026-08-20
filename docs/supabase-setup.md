@@ -203,9 +203,7 @@ CREATE TABLE IF NOT EXISTS public.order_items (
     product_name VARCHAR(255) NOT NULL,
     unit_price INTEGER NOT NULL DEFAULT 0,
     quantity INTEGER NOT NULL DEFAULT 1,
-    line_total INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    line_total INTEGER GENERATED ALWAYS AS (unit_price * quantity) STORED
 );
 ```
 
@@ -319,7 +317,7 @@ DEMO_WEBHOOK_URL=https://webhook.site/your-unique-uuid
 
 ### Q3: `500 Server Error` when visiting `/admin/customers` or `/admin/integration-logs`
 *   **Cause**: The custom SQL view `admin_customer_view` or table `integration_logs` has not been migrated on the Supabase database.
-*   **Solution**: Run `php artisan migrate` locally against Supabase, or visit the authenticated route `/admin/run-migrations` once.
+*   **Solution**: Run `php artisan migrate` locally against Supabase.
 
 ### Q4: Google OAuth redirects to an error or wrong URL
 *   **Cause**: The redirect URL is not listed under **Authentication -> URL Configuration -> Redirect URLs**.

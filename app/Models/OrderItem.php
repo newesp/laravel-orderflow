@@ -11,6 +11,8 @@ class OrderItem extends Model
     use HasFactory;
 
     protected $table = 'order_items';
+    
+    public $timestamps = false;
 
     protected $fillable = [
         'order_id',
@@ -18,7 +20,6 @@ class OrderItem extends Model
         'product_name',
         'unit_price',
         'quantity',
-        'line_total',
     ];
 
     protected function casts(): array
@@ -27,8 +28,6 @@ class OrderItem extends Model
             'unit_price' => 'integer',
             'quantity' => 'integer',
             'line_total' => 'integer',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
         ];
     }
 

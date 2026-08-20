@@ -43,7 +43,8 @@ class ProductController extends Controller
             $html = view('admin.products.index', compact('products'))->render();
             return response($html);
         } catch (\Throwable $e) {
-            return response($e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n\n" . $e->getTraceAsString(), 500);
+            \Illuminate\Support\Facades\Log::error($e);
+            return response('Internal Server Error', 500);
         }
     }
 
@@ -79,7 +80,8 @@ class ProductController extends Controller
             return redirect()->route('admin.products.index')
                 ->with('success', "Product '{$product->name}' created successfully.");
         } catch (\Throwable $e) {
-            return response($e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n\n" . $e->getTraceAsString(), 500);
+            \Illuminate\Support\Facades\Log::error($e);
+            return response('Internal Server Error', 500);
         }
     }
 
