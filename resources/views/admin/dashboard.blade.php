@@ -106,10 +106,14 @@
     </div>
 
     <!-- Secondary Status Counts -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div class="bg-white p-4 rounded-xl border border-slate-200 text-center">
             <span class="text-xs font-medium text-slate-500 uppercase">Processing</span>
             <div class="text-lg font-bold text-blue-600 mt-1">{{ $metrics['processing_orders'] }}</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 text-center">
+            <span class="text-xs font-medium text-slate-500 uppercase">Received</span>
+            <div class="text-lg font-bold text-teal-600 mt-1">{{ $metrics['received_orders'] }}</div>
         </div>
         <div class="bg-white p-4 rounded-xl border border-slate-200 text-center">
             <span class="text-xs font-medium text-slate-500 uppercase">Completed</span>
@@ -163,6 +167,8 @@
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">Pending</span>
                                 @elseif ($order->status === 'processing')
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">Processing</span>
+                                @elseif ($order->status === 'received')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-100 text-teal-800">Received</span>
                                 @elseif ($order->status === 'completed')
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">Completed</span>
                                 @elseif ($order->status === 'cancelled')

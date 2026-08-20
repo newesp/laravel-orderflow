@@ -29,7 +29,7 @@ class AdminOrderApiController extends Controller
         }
 
         if ($status = $request->input('status')) {
-            if (in_array($status, ['pending', 'processing', 'completed', 'cancelled'])) {
+            if (in_array($status, ['pending', 'processing', 'received', 'completed', 'cancelled'])) {
                 $query->where('status', $status);
             }
         }
@@ -55,7 +55,7 @@ class AdminOrderApiController extends Controller
     public function updateStatus(Request $request, Order $order, OrderStatusService $orderStatusService): JsonResponse
     {
         $request->validate([
-            'status' => ['required', 'string', 'in:pending,processing,completed,cancelled'],
+            'status' => ['required', 'string', 'in:pending,processing,received,completed,cancelled'],
         ]);
 
         $newStatus = $request->input('status');

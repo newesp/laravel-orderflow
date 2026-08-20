@@ -14,7 +14,7 @@ class AdminCustomerApiController extends Controller
         $query = Customer::query()
             ->withCount('orders')
             ->withSum(['orders as total_spent' => function ($query) {
-                $query->whereIn('status', ['processing', 'completed']);
+                $query->whereIn('status', ['processing', 'received', 'completed']);
             }], 'total');
 
         if ($search = $request->input('search')) {

@@ -108,7 +108,11 @@ class AdminOrderTest extends TestCase
         $res1->assertRedirect();
         $this->assertSame('processing', $order->fresh()->status);
 
-        // 2. processing -> completed
+        // 2. simulate external customer receiving order
+        $order->fresh()->update(['status' => 'received']);
+        $this->assertSame('received', $order->fresh()->status);
+
+        // 3. received -> completed
         $res2 = $this->actingAs($this->admin, 'admin')
             ->patch("/admin/orders/{$order->id}/status", ['status' => 'completed']);
 
@@ -129,6 +133,73 @@ class AdminOrderTest extends TestCase
 
         $response->assertRedirect();
         $this->assertSame('cancelled', $order->fresh()->status);
+    }
+
+    public function test_admin_can_cancel_processing_order(): void
+    {
+        $order = Order::create([
+            'user_id' => $this->customer->id,
+            'status' => 'processing',
+            'total' => 2500,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->patch("/admin/orders/{$order->id}/status", ['status' => 'cancelled']);
+
+        $response->assertRedirect();
+        $this->assertSame('cancelled', $order->fresh()->status);
+    }
+
+    public function test_customer_total_spent_does_not_drop_when_order_received(): void
+    {
+        $order = Order::create([
+            'user_id' => $this->customer->id,
+            'status' => 'processing',
+            'total' => 2500,
+        ]);
+
+        $customer = \App\Models\Customer::find($this->customer->id);
+        $this->assertSame(2500, $customer->total_spent);
+
+        $order->update(['status' => 'received']);
+
+        $customer = \App\Models\Customer::find($this->customer->id);
+        $this->assertSame(2500, $customer->total_spent);
+        
+        $order->update(['status' => 'completed']);
+        
+        $customer = \App\Models\Customer::find($this->customer->id);
+        $this->assertSame(2500, $customer->total_spent);
+    }
+
+    public function test_admin_cannot_make_illegal_transitions(): void
+    {
+        $order = Order::create([
+            'user_id' => $this->customer->id,
+            'status' => 'pending',
+            'total' => 2500,
+        ]);
+
+        // pending -> completed (FAIL)
+        $this->actingAs($this->admin, 'admin')->patch("/admin/orders/{$order->id}/status", ['status' => 'completed'])->assertSessionHas('error');
+        // pending -> received (FAIL)
+        $this->actingAs($this->admin, 'admin')->patch("/admin/orders/{$order->id}/status", ['status' => 'received'])->assertSessionHas('error');
+
+        $order->update(['status' => 'processing']);
+        
+        // processing -> completed (FAIL)
+        $this->actingAs($this->admin, 'admin')->patch("/admin/orders/{$order->id}/status", ['status' => 'completed'])->assertSessionHas('error');
+        // processing -> received (FAIL)
+        $this->actingAs($this->admin, 'admin')->patch("/admin/orders/{$order->id}/status", ['status' => 'received'])->assertSessionHas('error');
+
+        $order->update(['status' => 'received']);
+        
+        // received -> cancelled (FAIL)
+        $this->actingAs($this->admin, 'admin')->patch("/admin/orders/{$order->id}/status", ['status' => 'cancelled'])->assertSessionHas('error');
+        // received -> processing (FAIL)
+        $this->actingAs($this->admin, 'admin')->patch("/admin/orders/{$order->id}/status", ['status' => 'processing'])->assertSessionHas('error');
+        // received -> pending (FAIL)
+        $this->actingAs($this->admin, 'admin')->patch("/admin/orders/{$order->id}/status", ['status' => 'pending'])->assertSessionHas('error');
     }
 
     public function test_illegal_state_transition_via_web_returns_error_flash(): void

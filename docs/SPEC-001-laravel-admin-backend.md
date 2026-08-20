@@ -23,7 +23,7 @@ Key solution elements:
 2. **Dedicated Admin Authentication**: Implements a session-backed `AdminSessionUser` leveraging Supabase SSO (JWT/JWKS) for formal administrators and server-side environment variables for Demo Account capabilities.
 3. **Customer Presentation View**: Utilizes a secure PostgreSQL view `public.admin_customer_view` that safely joins `auth.users` with `public.profiles` to expose customer identity, ordering history, and lifetime spending without creating redundant customer records.
 4. **Product Catalog Management**: Manages physical and digital products respecting `slug` uniqueness, PostgreSQL `text[]` image paths, and `is_digital` / `digital_file_path` private storage attributes.
-5. **Deterministic Order Status Lifecycle**: Implements a strict `OrderStatusService` that manages linear status transitions (`pending -> processing -> completed`, `pending/processing -> cancelled`) and rejects illegal transitions by throwing domain business exceptions (`InvalidOrderStatusTransitionException`), which the API layer maps to HTTP 422 responses.
+5. **Deterministic Order Status Lifecycle**: Implements a strict `OrderStatusService` that manages strict status transitions (`pending -> processing | cancelled`, `processing -> cancelled`, `received -> completed`) and rejects illegal transitions by throwing domain business exceptions (`InvalidOrderStatusTransitionException`), which the API layer maps to HTTP 422 responses.
 6. **Integration Telemetry**: Records domain events and webhook dispatches in `public.integration_logs` with resilient offline mocking in CI.
 
 ---
@@ -57,11 +57,11 @@ Key solution elements:
 
 ### Order Operations & State Machine
 18. As an administrator, I want to browse a paginated list of all orders showing Order UUID, customer display name/email, order status badge, item count, total amount, and placement timestamp, so that I can oversee order fulfillment.
-19. As an administrator, I want to filter orders by status (`pending`, `processing`, `completed`, `cancelled`) and search by Order ID or customer email, so that I can focus on actionable orders.
+19. As an administrator, I want to filter orders by status (`pending`, `processing`, `received`, `completed`, `cancelled`) and search by Order ID or customer email, so that I can focus on actionable orders.
 20. As an administrator, I want to view full order details showing immutable order items (snapshot product name, snapshot unit price, quantity, and line total), so that I have an audit-proof record of what was purchased.
 21. As an administrator, I want to distinguish between physical orders (which start as `pending`) and digital orders (which start as `completed`), so that physical fulfillment workflows are only applied to shippable goods.
 22. As an administrator, I want to transition an order from `pending` to `processing`, so that warehouse staff can prepare physical shipments.
-23. As an administrator, I want to transition an order from `processing` to `completed`, so that the customer is notified of order fulfillment.
+23. As an administrator, I want to transition an order from `received` to `completed`, so that the customer is notified of order fulfillment.
 24. As an administrator, I want to cancel an order in `pending` or `processing` state, so that invalid or refunded orders are properly terminated.
 25. As an administrator, I want any illegal state transition (e.g. `completed -> pending`, `cancelled -> processing`) to be rejected with an explicit business error and HTTP 422 response, so that order integrity is strictly maintained.
 
@@ -113,10 +113,12 @@ Key solution elements:
 - **Permitted Transitions**:
   ```text
   pending    -> processing | cancelled
-  processing -> completed  | cancelled
-  completed  -> (none)
-  cancelled  -> (none)
+  processing -> cancelled
+  received   -> completed
+  completed  -> none
+  cancelled  -> none
   ```
+  *(Note: `processing -> received` 不是 Laravel Admin action；Laravel 只會讀到 `received`，並允許 `received -> completed`。)*
 - **Service Layer & Domain Exceptions**:
   - Transition logic is encapsulated inside `App\Services\OrderStatusService`.
   - Illegal transitions throw a domain business exception: `App\Exceptions\InvalidOrderStatusTransitionException`.
@@ -150,7 +152,7 @@ Key solution elements:
 - **Auth Tests**: Guest redirection, admin login success/failure, demo admin account protection.
 - **Product Tests**: Product creation with validation, unique slug enforcement, active state toggling, digital file path persistence.
 - **Customer Tests**: Querying customers via `admin_customer_view`, order aggregation calculation.
-- **Order Tests**: Order filtering, detail inspection, valid transition progression (`pending -> processing -> completed`).
+- **Order Tests**: Order filtering, detail inspection, valid transition progression (`pending -> processing`, `received -> completed`).
 - **State Machine Boundary Tests**: Asserting HTTP 422 / exception on illegal transitions (`completed -> pending`, `cancelled -> processing`).
 - **Integration Log Tests**: Ensuring log generation upon order state changes and asserting graceful failure recording when webhook fails.
 

@@ -67,7 +67,7 @@ An enterprise-grade, high-performance Order & Catalog Management backend and adm
 
 1. **Executive Dashboard & Real-Time Metrics**:
    - Total Gross Revenue, Pending Orders count, Active Products count, and Total Customers.
-   - Order pipeline breakdown (`pending`, `processing`, `completed`, `cancelled`).
+   - Order pipeline breakdown (`pending`, `processing`, `received`, `completed`, `cancelled`).
    - Recent orders quick-view with direct navigation to fulfillment operations.
 
 2. **Product Catalog Management**:
@@ -80,7 +80,13 @@ An enterprise-grade, high-performance Order & Catalog Management backend and adm
    - Comprehensive customer profile showing total spend, order count, and complete order history.
 
 4. **Order Operations & Directional State Machine**:
-   - Strict transition rules (`pending -> processing -> completed` / `cancelled`).
+   - Strict transition rules:
+     - `pending -> processing | cancelled`
+     - `processing -> cancelled`
+     - `received -> completed`
+     - `completed -> none`
+     - `cancelled -> none`
+     (Note: `processing -> received` 不是 Laravel Admin action；Laravel 只會讀到 `received`，並允許 `received -> completed`。)
    - Prevents illegal rollback from terminal states.
    - Order line item snapshots with unit prices and computed totals.
 
@@ -247,11 +253,11 @@ Automated tests run on every push and pull request via GitHub Actions against an
 vendor/bin/phpunit
 ```
 
-### Verified Test Matrix (40 Tests, 126 Assertions)
+### Extensive Test Matrix (Automated Assertions)
 - **Migration Ownership Audit**: Confirms rollback does not drop shared Storefront tables.
 - **Supabase JWKS SSO Validation**: Verifies valid admin token authorization, token claims (`iss`, `aud`, `exp`), and non-admin 403 rejection.
 - **Env-based Demo Admin**: Verifies login, disabled states, session invalidation, and destructive operation guards.
-- **State Machine Progression**: Verifies directional transitions (`pending -> processing/completed`) and illegal transition HTTP 422 mapping.
+- **State Machine Progression**: Verifies directional transitions (`pending -> processing`, `received -> completed`) and illegal transition HTTP 422 mapping.
 - **Integration Telemetry**: Verifies event logging and non-blocking webhook error handling.
 
 ---

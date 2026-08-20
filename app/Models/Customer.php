@@ -49,12 +49,12 @@ class Customer extends Model
 
         if ($this->relationLoaded('orders')) {
             return (int) $this->orders
-                ->whereIn('status', ['processing', 'completed'])
+                ->whereIn('status', ['processing', 'received', 'completed'])
                 ->sum('total');
         }
 
         return (int) $this->orders()
-            ->whereIn('status', ['processing', 'completed'])
+            ->whereIn('status', ['processing', 'received', 'completed'])
             ->sum('total');
     }
 
