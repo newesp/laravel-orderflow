@@ -49,8 +49,6 @@ class P2BaselineTest extends TestCase
 
     public function test_web_order_list_can_search_by_customer_email_case_insensitive()
     {
-        // For SQLite, email is generated as `display_name . '@example.com'` in view
-        // So we will use a specific prefix to make it predictable across both.
         $id1 = (string) Str::uuid();
         $this->createCustomerWithEmail($id1, 'john.doe@example.com', 'john.doe');
         Order::create(['user_id' => $id1, 'status' => 'pending', 'total' => 100]);
@@ -59,8 +57,10 @@ class P2BaselineTest extends TestCase
         $this->createCustomerWithEmail($id2, 'jane.smith@example.com', 'jane.smith');
         Order::create(['user_id' => $id2, 'status' => 'pending', 'total' => 200]);
 
+        // Search token contains the email domain, which display_name does not have.
+        // Thus, it will only match email, not display_name.
         $response = $this->actingAs($this->admin, 'admin')
-            ->get('/admin/orders?search=JOHN.DOE'); // case-insensitive
+            ->get('/admin/orders?search=JOHN.DOE@EXAMPLE.COM');
 
         $response->assertStatus(200);
         $response->assertSee('john.doe');
@@ -77,8 +77,9 @@ class P2BaselineTest extends TestCase
         $this->createCustomerWithEmail($id2, 'bob.builder@example.com', 'bob.builder');
         Order::create(['user_id' => $id2, 'status' => 'pending', 'total' => 200]);
 
+        // Same trick for API
         $response = $this->actingAs($this->admin, 'admin')
-            ->getJson('/api/admin/orders?search=alice.WONDER');
+            ->getJson('/api/admin/orders?search=ALICE.WONDER@EXAMPLE.COM');
 
         $response->assertStatus(200);
         $response->assertJsonFragment(['user_id' => $id1]);
@@ -182,6 +183,32 @@ class P2BaselineTest extends TestCase
 
         $this->assertArrayHasKey('active', $payload['changes']);
         $this->assertFalse($payload['changes']['active']);
+    }
+
+    public function test_api_product_update_invalid_request_contract()
+    {
+        $product = Product::create([
+            'name' => 'Old Name',
+            'slug' => 'old-name',
+            'price' => 100,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'admin')
+            ->putJson("/api/admin/products/{$product->id}", [
+                'name' => '', // invalid
+                'price' => 'invalid_price' // invalid
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'errors' => [
+                'name',
+                'price',
+            ]
+        ]);
+        $response->assertJson(['success' => false, 'message' => 'Validation failed.']);
     }
 
     public function test_api_validation_error_contract()
