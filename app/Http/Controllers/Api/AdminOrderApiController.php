@@ -21,6 +21,9 @@ class AdminOrderApiController extends Controller
                   ->orWhereRaw('LOWER(CAST(user_id AS TEXT)) LIKE ?', ["%{$clean}%"])
                   ->orWhereHas('profile', function ($pq) use ($clean) {
                       $pq->whereRaw('LOWER(display_name) LIKE ?', ["%{$clean}%"]);
+                  })
+                  ->orWhereHas('customer', function ($cq) use ($clean) {
+                      $cq->whereRaw('LOWER(email) LIKE ?', ["%{$clean}%"]);
                   });
             });
         }

@@ -100,6 +100,11 @@ class AdminProductApiController extends Controller
             'digital_file_path' => $data['digital_file_path'] ?? null,
         ]);
 
+        $changes = \Illuminate\Support\Arr::except($product->getChanges(), ['updated_at']);
+        if (!empty($changes)) {
+            \App\Events\ProductUpdated::dispatch($product, $changes);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Product updated successfully',
@@ -110,6 +115,11 @@ class AdminProductApiController extends Controller
     public function toggleStatus(Product $product): JsonResponse
     {
         $product->update(['active' => !$product->active]);
+
+        $changes = \Illuminate\Support\Arr::except($product->getChanges(), ['updated_at']);
+        if (!empty($changes)) {
+            \App\Events\ProductUpdated::dispatch($product, $changes);
+        }
 
         return response()->json([
             'success' => true,

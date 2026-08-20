@@ -25,6 +25,9 @@ class OrderController extends Controller
                   })
                   ->orWhereHas('orderItems', function ($iq) use ($clean) {
                       $iq->whereRaw('LOWER(product_name) LIKE ?', ["%{$clean}%"]);
+                  })
+                  ->orWhereHas('customer', function ($cq) use ($clean) {
+                      $cq->whereRaw('LOWER(email) LIKE ?', ["%{$clean}%"]);
                   });
             });
         }

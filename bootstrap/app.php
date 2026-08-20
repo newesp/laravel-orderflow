@@ -37,4 +37,15 @@ return Application::configure(basePath: dirname(__DIR__))
             }
             return back()->with('error', $e->getMessage());
         });
+
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed.',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+            // Use framework default for non-JSON requests (redirect back, session errors, old input)
+        });
     })->create();
