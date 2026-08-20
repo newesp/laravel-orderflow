@@ -8,6 +8,10 @@ A lightweight order management SaaS backend for small businesses, co-existing wi
 
 **Order**:
 A formal commercial purchase record submitted by a customer via the Storefront RPC and managed by administrators in the backend, identified by a UUID primary key, with total stored as integer NTD and an explicit lifecycle status.
+*Lifecycle Semantics:*
+- `received` = customer explicitly confirmed receipt
+- Laravel Admin 不執行 `processing -> received`
+- Laravel Admin 可執行 `received -> completed`
 _Avoid_: Purchase, transaction, bill, cart
 
 **OrderItem**:

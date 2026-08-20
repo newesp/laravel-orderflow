@@ -57,11 +57,11 @@ Key solution elements:
 
 ### Order Operations & State Machine
 18. As an administrator, I want to browse a paginated list of all orders showing Order UUID, customer display name/email, order status badge, item count, total amount, and placement timestamp, so that I can oversee order fulfillment.
-19. As an administrator, I want to filter orders by status (`pending`, `processing`, `completed`, `cancelled`) and search by Order ID or customer email, so that I can focus on actionable orders.
+19. As an administrator, I want to filter orders by status (`pending`, `processing`, `received`, `completed`, `cancelled`) and search by Order ID or customer email, so that I can focus on actionable orders.
 20. As an administrator, I want to view full order details showing immutable order items (snapshot product name, snapshot unit price, quantity, and line total), so that I have an audit-proof record of what was purchased.
 21. As an administrator, I want to distinguish between physical orders (which start as `pending`) and digital orders (which start as `completed`), so that physical fulfillment workflows are only applied to shippable goods.
 22. As an administrator, I want to transition an order from `pending` to `processing`, so that warehouse staff can prepare physical shipments.
-23. As an administrator, I want to transition an order from `processing` to `completed`, so that the customer is notified of order fulfillment.
+23. As an administrator, I want to transition an order from `received` to `completed`, so that the customer is notified of order fulfillment.
 24. As an administrator, I want to cancel an order in `pending` or `processing` state, so that invalid or refunded orders are properly terminated.
 25. As an administrator, I want any illegal state transition (e.g. `completed -> pending`, `cancelled -> processing`) to be rejected with an explicit business error and HTTP 422 response, so that order integrity is strictly maintained.
 

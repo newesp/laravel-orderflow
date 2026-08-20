@@ -67,7 +67,7 @@ An enterprise-grade, high-performance Order & Catalog Management backend and adm
 
 1. **Executive Dashboard & Real-Time Metrics**:
    - Total Gross Revenue, Pending Orders count, Active Products count, and Total Customers.
-   - Order pipeline breakdown (`pending`, `processing`, `completed`, `cancelled`).
+   - Order pipeline breakdown (`pending`, `processing`, `received`, `completed`, `cancelled`).
    - Recent orders quick-view with direct navigation to fulfillment operations.
 
 2. **Product Catalog Management**:
@@ -253,7 +253,7 @@ Automated tests run on every push and pull request via GitHub Actions against an
 vendor/bin/phpunit
 ```
 
-### Verified Test Matrix (40 Tests, 126 Assertions)
+### Extensive Test Matrix (Automated Assertions)
 - **Migration Ownership Audit**: Confirms rollback does not drop shared Storefront tables.
 - **Supabase JWKS SSO Validation**: Verifies valid admin token authorization, token claims (`iss`, `aud`, `exp`), and non-admin 403 rejection.
 - **Env-based Demo Admin**: Verifies login, disabled states, session invalidation, and destructive operation guards.
