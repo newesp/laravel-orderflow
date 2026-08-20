@@ -32,7 +32,7 @@ class TestDatabaseBootstrapper
             // public.profiles
             DB::statement("
                 CREATE TABLE IF NOT EXISTS public.profiles (
-                    id UUID PRIMARY KEY ,
+                    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
                     display_name VARCHAR(255),
                     role VARCHAR(50) DEFAULT 'customer',
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -62,7 +62,7 @@ class TestDatabaseBootstrapper
             DB::statement("
                 CREATE TABLE IF NOT EXISTS public.orders (
                     id UUID PRIMARY KEY,
-                    user_id UUID NOT NULL ,
+                    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
                     status VARCHAR(50) NOT NULL DEFAULT 'pending',
                     total INTEGER NOT NULL DEFAULT 0,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
