@@ -250,4 +250,46 @@ class AdminProductTest extends TestCase
         ]);
         $this->assertTrue($response->json('success'));
     }
+
+    public function test_admin_upload_product_image_error_returns_generic_response(): void
+    {
+        \Illuminate\Support\Facades\Http::fake([
+            '*/storage/v1/object/product-images/*' => \Illuminate\Support\Facades\Http::response('Upload failed', 500),
+        ]);
+        
+        $this->mock(\App\Services\SupabaseStorageService::class, function ($mock) {
+            $mock->shouldReceive('uploadProductImage')->andThrow(new \Exception('Secret internal error details'));
+        });
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('test-error.png', 100, 'image/png');
+
+        $response = $this->actingAs($this->admin, 'admin')->postJson('/admin/products/upload-image', [
+            'image' => $file,
+        ]);
+
+        $response->assertStatus(500);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Internal Server Error',
+        ]);
+    }
+
+    public function test_admin_upload_digital_file_error_returns_generic_response(): void
+    {
+        $this->mock(\App\Services\SupabaseStorageService::class, function ($mock) {
+            $mock->shouldReceive('uploadProductFile')->andThrow(new \Exception('Secret internal error details'));
+        });
+
+        $file = \Illuminate\Http\UploadedFile::fake()->create('handbook-error.zip', 100, 'application/zip');
+
+        $response = $this->actingAs($this->admin, 'admin')->postJson('/admin/products/upload-file', [
+            'file' => $file,
+        ]);
+
+        $response->assertStatus(500);
+        $response->assertJson([
+            'success' => false,
+            'message' => 'Internal Server Error',
+        ]);
+    }
 }

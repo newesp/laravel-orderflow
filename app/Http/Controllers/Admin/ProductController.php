@@ -147,9 +147,10 @@ class ProductController extends Controller
             $result = $storageService->uploadProductImage($request->file('image'));
             return response()->json($result);
         } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error($e);
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Internal Server Error',
             ], 500);
         }
     }
@@ -164,9 +165,10 @@ class ProductController extends Controller
             $result = $storageService->uploadProductFile($request->file('file'));
             return response()->json($result);
         } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error($e);
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Internal Server Error',
             ], 500);
         }
     }

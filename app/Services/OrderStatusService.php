@@ -58,8 +58,10 @@ class OrderStatusService
                 'status' => $newStatus,
             ]);
 
-            // Dispatch domain event for logging and webhooks
-            event(new OrderStatusChanged($lockedOrder, $currentStatus, $newStatus));
+            // Dispatch domain event for logging and webhooks after commit
+            \Illuminate\Support\Facades\DB::afterCommit(function () use ($lockedOrder, $currentStatus, $newStatus) {
+                event(new OrderStatusChanged($lockedOrder, $currentStatus, $newStatus));
+            });
 
             return $lockedOrder;
         });

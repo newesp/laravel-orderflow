@@ -142,4 +142,27 @@ class AdminIntegrationLogTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonPath('data.total', 1);
     }
+
+    public function test_integration_event_is_dispatched_after_commit(): void
+    {
+        $order = Order::create([
+            'user_id' => $this->customer->id,
+            'status' => 'pending',
+            'total' => 1200,
+        ]);
+
+        $service = app(OrderStatusService::class);
+        $initialLevel = \Illuminate\Support\Facades\DB::transactionLevel();
+
+        $eventFired = false;
+        \Illuminate\Support\Facades\Event::listen(\App\Events\OrderStatusChanged::class, function () use (&$eventFired, $initialLevel) {
+            $eventFired = true;
+            // Assert we are back to the initial transaction level (1 due to RefreshDatabase)
+            $this->assertEquals($initialLevel, \Illuminate\Support\Facades\DB::transactionLevel());
+        });
+
+        $service->transition($order, 'processing');
+
+        $this->assertTrue($eventFired);
+    }
 }
