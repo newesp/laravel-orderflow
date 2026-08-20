@@ -100,4 +100,34 @@ class IntegrationService
             }
         }
     }
+
+    public function handleProductUpdated(string $productId, array $changes): void
+    {
+        // Spec requirements:
+        // event_type: product.updated
+        // reference_type: product
+        // reference_id: <product uuid>
+        // target: internal-audit
+        // status: success
+        // payload: product_id, changes, timestamp
+        
+        $payload = [
+            'product_id' => $productId,
+            'changes' => $changes,
+            'timestamp' => now()->toIso8601String(),
+        ];
+
+        try {
+            $this->log(
+                eventType: 'product.updated',
+                refType: 'product',
+                refId: $productId,
+                target: 'internal-audit',
+                status: 'success',
+                payload: $payload
+            );
+        } catch (Throwable $e) {
+            Log::error("Failed to log product update for {$productId}: " . $e->getMessage());
+        }
+    }
 }

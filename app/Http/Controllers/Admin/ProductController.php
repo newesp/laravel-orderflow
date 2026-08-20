@@ -113,6 +113,11 @@ class ProductController extends Controller
             'digital_file_path' => $data['digital_file_path'] ?? null,
         ]);
 
+        $changes = \Illuminate\Support\Arr::except($product->getChanges(), ['updated_at']);
+        if (!empty($changes)) {
+            \App\Events\ProductUpdated::dispatch($product, $changes);
+        }
+
         return redirect()->route('admin.products.index')
             ->with('success', "Product '{$product->name}' updated successfully.");
     }
@@ -122,6 +127,11 @@ class ProductController extends Controller
         $product->update([
             'active' => !$product->active,
         ]);
+
+        $changes = \Illuminate\Support\Arr::except($product->getChanges(), ['updated_at']);
+        if (!empty($changes)) {
+            \App\Events\ProductUpdated::dispatch($product, $changes);
+        }
 
         $statusStr = $product->active ? 'active' : 'inactive';
 
