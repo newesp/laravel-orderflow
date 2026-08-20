@@ -10,7 +10,7 @@
 
 Small e-commerce businesses operating with `modern-storefront` need a performant, reliable, and secure back-office web administration system to manage product listings, inspect customer profiles, audit orders, transition order lifecycle statuses, and monitor integration telemetry.
 
-Currently, administrative tasks in `modern-storefront` are partially handled via client-side React routes interacting directly with Supabase RLS. However, a dedicated server-side SaaS backend (built with PHP 8.3+ and Laravel 11) is required to provide server-side business workflows, robust data aggregation (such as customer lifetime value and order metrics), deterministic state machine transitions with business rule validation, demo login capabilities for prospective employers/evaluators, and integration webhook telemetry—all while safely sharing the existing Supabase PostgreSQL database without degrading storefront operations, changing storefront semantics, or exposing privileged credentials.
+Currently, administrative tasks in `modern-storefront` are partially handled via client-side React routes interacting directly with Supabase RLS. However, a dedicated server-side SaaS backend (built with PHP 8.3+ and Laravel 13) is required to provide server-side business workflows, robust data aggregation (such as customer lifetime value and order metrics), deterministic state machine transitions with business rule validation, demo login capabilities for prospective employers/evaluators, and integration webhook telemetry—all while safely sharing the existing Supabase PostgreSQL database without degrading storefront operations, changing storefront semantics, or exposing privileged credentials.
 
 ---
 
@@ -20,7 +20,7 @@ Build **OrderFlow Lite** — a PHP 8.3+ / Laravel SaaS Administration Backend co
 
 Key solution elements:
 1. **Shared Database Architecture**: Reads from and writes to existing PostgreSQL tables (`products`, `orders`, `order_items`, `profiles`, `auth.users`) without breaking existing RLS, triggers, or the `create_demo_order` RPC.
-2. **Dedicated Admin Authentication**: Implements a dedicated `public.admin_users` table and Laravel Auth guard with built-in Demo Account capabilities (`demo@example.com` / `demo1234`).
+2. **Dedicated Admin Authentication**: Implements a session-backed `AdminSessionUser` leveraging Supabase SSO (JWT/JWKS) for formal administrators and server-side environment variables for Demo Account capabilities.
 3. **Customer Presentation View**: Utilizes a secure PostgreSQL view `public.admin_customer_view` that safely joins `auth.users` with `public.profiles` to expose customer identity, ordering history, and lifetime spending without creating redundant customer records.
 4. **Product Catalog Management**: Manages physical and digital products respecting `slug` uniqueness, PostgreSQL `text[]` image paths, and `is_digital` / `digital_file_path` private storage attributes.
 5. **Deterministic Order Status Lifecycle**: Implements a strict `OrderStatusService` that manages linear status transitions (`pending -> processing -> completed`, `pending/processing -> cancelled`) and rejects illegal transitions by throwing domain business exceptions (`InvalidOrderStatusTransitionException`), which the API layer maps to HTTP 422 responses.
@@ -87,11 +87,10 @@ Key solution elements:
 - **Shared Schema Entities**:
   - `public.products`: Primary key `id` (UUID), `price` (integer), `image_paths` (text[]), `slug` (text unique), `is_digital` (boolean), `digital_file_path` (text nullable).
   - `public.orders`: Primary key `id` (UUID), `user_id` (UUID -> `auth.users`), `total` (integer), `status` (text check constraint).
-  - `public.order_items`: Primary key `id` (bigint identity), `order_id` (UUID), `product_id` (UUID nullable), `product_name` (text snapshot), `unit_price` (integer snapshot), `quantity` (integer), `line_total` (stored generated column).
+  - `public.order_items`: Primary key `id` (BIGSERIAL / bigint identity), `order_id` (UUID), `product_id` (UUID nullable), `product_name` (text snapshot), `unit_price` (integer snapshot), `quantity` (integer), `line_total` (stored generated column).
   - `public.profiles`: Primary key `id` (UUID -> `auth.users`), `display_name` (text), `role` (text).
   - `auth.users`: Supabase Auth identity table (`id`, `email`, `created_at`).
 - **Laravel-Managed Migrations**:
-  - `public.admin_users`: `id` (bigint PK), `name` (string), `email` (string unique), `password` (string), `remember_token`, timestamps.
   - `public.integration_logs`: `id` (bigint PK), `event_type` (string), `reference_type` (string), `reference_id` (string), `target` (string), `status` (string), `payload` (jsonb nullable), `response` (jsonb nullable), `error_message` (text nullable), `created_at` (timestamp).
   - `public.admin_customer_view`: PostgreSQL View definition:
     ```sql
@@ -125,9 +124,9 @@ Key solution elements:
   - Blade controllers catch the exception to return user-friendly flash warning notifications.
 
 ### 4. Integration Telemetry & Event Pipeline
-- Order status changes and product updates dispatch internal Laravel events (`App\Events\OrderStatusChanged`).
-- Event listeners invoke `App\Services\IntegrationService` to write records to `public.integration_logs`.
-- If `DEMO_WEBHOOK_URL` is populated in the environment, the integration service dispatches an asynchronous/synchronous HTTP POST request with a timeout. If the request fails, the integration log status is recorded as `failed` with the error trace, while preserving the committed database transaction.
+- Order status changes and product updates dispatch internal Laravel events (`App\Events\OrderStatusChanged` and `App\Events\ProductUpdated`).
+- Event listeners invoke `App\Services\IntegrationService` to write internal audit records to `public.integration_logs`.
+- For order status changes, if `DEMO_WEBHOOK_URL` is populated in the environment, the integration service additionally dispatches an asynchronous/synchronous HTTP POST request with a timeout. If the request fails, the integration log status is recorded as `failed` with the error trace, while preserving the committed database transaction. (Product updates only target internal-audit).
 
 ---
 

@@ -43,6 +43,16 @@ class Customer extends Model
 
     public function getTotalSpentAttribute(): int
     {
+        if (array_key_exists('total_spent', $this->attributes)) {
+            return (int) $this->attributes['total_spent'];
+        }
+
+        if ($this->relationLoaded('orders')) {
+            return (int) $this->orders
+                ->whereIn('status', ['processing', 'completed'])
+                ->sum('total');
+        }
+
         return (int) $this->orders()
             ->whereIn('status', ['processing', 'completed'])
             ->sum('total');

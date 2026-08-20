@@ -11,7 +11,11 @@ class CustomerController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Customer::query()->withCount('orders');
+        $query = Customer::query()
+            ->withCount('orders')
+            ->withSum(['orders as total_spent' => function ($query) {
+                $query->whereIn('status', ['processing', 'completed']);
+            }], 'total');
 
         if ($search = $request->input('search')) {
             $clean = strtolower(trim($search));

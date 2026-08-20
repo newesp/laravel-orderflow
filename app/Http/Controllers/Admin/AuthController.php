@@ -9,6 +9,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Throwable;
 
@@ -17,6 +20,27 @@ class AuthController extends Controller
     public function __construct(
         protected AdminAuthService $adminAuthService
     ) {}
+
+    protected function throttleKey(Request $request): string
+    {
+        $email = $request->input('email') ? Str::lower($request->input('email')) : 'supabase';
+        return Str::transliterate($email . '|' . $request->ip());
+    }
+
+    protected function ensureIsNotRateLimited(Request $request): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey($request), 5)) {
+            return;
+        }
+
+        if ($request->wantsJson()) {
+            abort(429, 'Too many login attempts. Please try again later.');
+        }
+
+        throw ValidationException::withMessages([
+            'email' => 'Too many login attempts. Please try again later.',
+        ])->status(429);
+    }
 
     public function showLogin(): View|RedirectResponse
     {
@@ -32,6 +56,8 @@ class AuthController extends Controller
 
     public function login(Request $request): RedirectResponse
     {
+        $this->ensureIsNotRateLimited($request);
+
         $credentials = $request->validate([
             'email' => ['required', 'string'],
             'password' => ['required', 'string'],
@@ -40,12 +66,15 @@ class AuthController extends Controller
         $user = $this->adminAuthService->attemptDemoLogin($credentials['email'], $credentials['password']);
 
         if ($user) {
+            RateLimiter::clear($this->throttleKey($request));
             $this->adminAuthService->loginSession($request, $user);
             Auth::guard('admin')->login($user);
 
             return redirect()->intended(route('admin.dashboard'))
                 ->with('success', 'Welcome back, ' . $user->name . '!');
         }
+
+        RateLimiter::hit($this->throttleKey($request), 60);
 
         return back()->withErrors([
             'email' => 'Invalid credentials or demo access is disabled.',
@@ -54,6 +83,8 @@ class AuthController extends Controller
 
     public function loginWithSupabase(Request $request): JsonResponse|RedirectResponse
     {
+        $this->ensureIsNotRateLimited($request);
+
         $request->validate([
             'access_token' => ['required', 'string'],
         ]);
@@ -62,6 +93,8 @@ class AuthController extends Controller
 
         try {
             $user = $this->adminAuthService->attemptSupabaseTokenLogin($token);
+            
+            RateLimiter::clear($this->throttleKey($request));
             $this->adminAuthService->loginSession($request, $user, $token);
             Auth::guard('admin')->login($user);
 
@@ -76,6 +109,7 @@ class AuthController extends Controller
             return redirect()->intended(route('admin.dashboard'))
                 ->with('success', 'Welcome back, ' . $user->name . '!');
         } catch (ForbiddenAdminException $e) {
+            RateLimiter::hit($this->throttleKey($request), 60);
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -84,6 +118,7 @@ class AuthController extends Controller
             }
             return back()->withErrors(['email' => $e->getMessage()]);
         } catch (Throwable $e) {
+            RateLimiter::hit($this->throttleKey($request), 60);
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -110,6 +145,8 @@ class AuthController extends Controller
             return $this->loginWithSupabase($request);
         }
 
+        $this->ensureIsNotRateLimited($request);
+
         // 2. Demo credentials login
         $credentials = $request->validate([
             'email' => ['required', 'string'],
@@ -119,6 +156,7 @@ class AuthController extends Controller
         $user = $this->adminAuthService->attemptDemoLogin($credentials['email'], $credentials['password']);
 
         if ($user) {
+            RateLimiter::clear($this->throttleKey($request));
             $this->adminAuthService->loginSession($request, $user);
             Auth::guard('admin')->login($user);
 
@@ -128,6 +166,8 @@ class AuthController extends Controller
                 'data' => $user->toArray(),
             ]);
         }
+
+        RateLimiter::hit($this->throttleKey($request), 60);
 
         return response()->json([
             'success' => false,

@@ -34,7 +34,7 @@ class AdminOrderApiController extends Controller
             }
         }
 
-        $orders = $query->orderBy('created_at', 'desc')->paginate($request->integer('per_page', 15));
+        $orders = $query->orderBy('created_at', 'desc')->paginate($this->getPerPage($request));
 
         return response()->json([
             'success' => true,

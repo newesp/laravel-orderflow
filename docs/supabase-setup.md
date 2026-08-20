@@ -24,7 +24,7 @@ OrderFlow Lite connects directly to the Supabase PostgreSQL database shared with
 ```
 +------------------------------------+      +------------------------------------+
 |    Modern Storefront (Customer)    |      |    OrderFlow Lite (Admin Panel)    |
-|   - React 19 / Supabase Client JS  |      |   - Laravel 11/12 (PHP 8.3 / PDO)  |
+|   - React 19 / Supabase Client JS  |      |   - Laravel 13 (PHP 8.3 / PDO)     |
 +-----------------+------------------+      +-----------------+------------------+
                   |                                           |
                   | (Supabase SDK / PostgREST)                | (PostgreSQL Direct / Pooler)
