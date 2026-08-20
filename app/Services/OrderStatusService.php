@@ -13,7 +13,8 @@ class OrderStatusService
      */
     protected array $allowedTransitions = [
         'pending' => ['processing', 'cancelled'],
-        'processing' => ['completed', 'cancelled'],
+        'processing' => ['cancelled'],
+        'received' => ['completed'],
         'completed' => [],
         'cancelled' => [],
     ];

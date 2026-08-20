@@ -1,4 +1,4 @@
-# OrderFlow Lite â€” Modern Storefront Laravel Admin Backend
+# OrderFlow Lite ??Modern Storefront Laravel Admin Backend
 
 [![Laravel CI](https://github.com/newesp/laravel-orderflow/actions/workflows/ci.yml/badge.svg)](https://github.com/newesp/laravel-orderflow/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -10,7 +10,7 @@ An enterprise-grade, high-performance Order & Catalog Management backend and adm
 
 ---
 
-## ğŸ“‘ Table of Contents
+## ?? Table of Contents
 
 - [Architectural Overview](#-architectural-overview)
 - [Core Features](#-core-features)
@@ -25,7 +25,7 @@ An enterprise-grade, high-performance Order & Catalog Management backend and adm
 
 ---
 
-## ğŸŒŸ Architectural Overview
+## ?? Architectural Overview
 
 ```
 +-------------------------------------------------------------------------------+
@@ -63,7 +63,7 @@ An enterprise-grade, high-performance Order & Catalog Management backend and adm
 
 ---
 
-## âœ¨ Core Features
+## ??Core Features
 
 1. **Executive Dashboard & Real-Time Metrics**:
    - Total Gross Revenue, Pending Orders count, Active Products count, and Total Customers.
@@ -80,7 +80,7 @@ An enterprise-grade, high-performance Order & Catalog Management backend and adm
    - Comprehensive customer profile showing total spend, order count, and complete order history.
 
 4. **Order Operations & Directional State Machine**:
-   - Strict transition rules (`pending -> processing -> completed` / `cancelled`).
+   - Strict transition rules (`pending -> processing -> received -> completed` / `cancelled`).
    - Prevents illegal rollback from terminal states.
    - Order line item snapshots with unit prices and computed totals.
 
@@ -91,7 +91,7 @@ An enterprise-grade, high-performance Order & Catalog Management backend and adm
 
 ---
 
-## ğŸ” Authentication & Security Architecture
+## ?? Authentication & Security Architecture
 
 OrderFlow Lite implements a strict, modern security architecture:
 
@@ -118,7 +118,7 @@ OrderFlow Lite implements a strict, modern security architecture:
 
 ---
 
-## ğŸ“¦ Database Ownership Boundary
+## ?“¦ Database Ownership Boundary
 
 | Object | Managing Authority | Laravel Migration Behavior |
 | :--- | :--- | :--- |
@@ -134,7 +134,7 @@ OrderFlow Lite implements a strict, modern security architecture:
 
 ---
 
-## ğŸš€ Quick Start (Local Development)
+## ?? Quick Start (Local Development)
 
 ### Prerequisites
 - PHP 8.3+ (with `pdo_pgsql`, `pgsql`, `mbstring`, `fileinfo`, `zip`, `openssl`)
@@ -193,7 +193,7 @@ OrderFlow Lite implements a strict, modern security architecture:
 
 ---
 
-## â˜ï¸ Vercel Serverless Deployment
+## ?ï? Vercel Serverless Deployment
 
 OrderFlow Lite is optimized for deployment on **Vercel Serverless** using `vercel-php@0.7.3`.
 
@@ -230,15 +230,15 @@ DEMO_ADMIN_PASSWORD=demo1234
 
 ---
 
-## ğŸ“– Supabase Manual Setup Guide
+## ?? Supabase Manual Setup Guide
 
 For detailed step-by-step instructions on setting up Supabase, Google OAuth SSO, database tables, connection pooler, and admin role assignments, see our dedicated guide:
 
-ğŸ‘‰ [**Supabase Manual Setup Guide (docs/supabase-setup.md)**](docs/supabase-setup.md)
+?? [**Supabase Manual Setup Guide (docs/supabase-setup.md)**](docs/supabase-setup.md)
 
 ---
 
-## ğŸ§ª Automated Testing & CI
+## ?§ª Automated Testing & CI
 
 Automated tests run on every push and pull request via GitHub Actions against an isolated **PostgreSQL 16** service container.
 
@@ -256,7 +256,7 @@ vendor/bin/phpunit
 
 ---
 
-## ğŸ“¡ REST API Reference
+## ?“¡ REST API Reference
 
 All administrative API endpoints are prefixed with `/api/admin` and protected by the `auth:admin` guard.
 
@@ -280,6 +280,6 @@ All administrative API endpoints are prefixed with `/api/admin` and protected by
 
 ---
 
-## ğŸ“„ License
+## ?? License
 
 This project is open-sourced software licensed under the [MIT license](LICENSE).

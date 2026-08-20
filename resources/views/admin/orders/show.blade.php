@@ -12,6 +12,8 @@
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">Pending</span>
                 @elseif ($order->status === 'processing')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">Processing</span>
+                @elseif ($order->status === 'received')
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-teal-100 text-teal-800">Received</span>
                 @elseif ($order->status === 'completed')
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Completed</span>
                 @elseif ($order->status === 'cancelled')
@@ -32,6 +34,17 @@
         @if (count($allowedNext) > 0)
             <div class="flex flex-wrap items-center gap-3">
                 <span class="text-xs text-slate-500">Allowed next state transitions:</span>
+                
+                @if ($order->status === 'processing')
+                    <span class="px-4 py-2 bg-slate-100 text-slate-500 text-xs font-bold rounded-lg border border-slate-200">
+                        Waiting for customer receipt confirmation
+                    </span>
+                @elseif ($order->status === 'received')
+                    <span class="px-4 py-2 bg-slate-100 text-slate-500 text-xs font-bold rounded-lg border border-slate-200">
+                        Customer confirmed receipt
+                    </span>
+                @endif
+
                 @foreach ($allowedNext as $nextStatus)
                     <form method="POST" action="{{ route('admin.orders.update-status', $order) }}" class="inline">
                         @csrf

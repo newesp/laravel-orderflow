@@ -1,4 +1,4 @@
-# SPEC-001: OrderFlow Lite — Laravel Admin Backend for Modern Storefront
+# SPEC-001: OrderFlow Lite ??Laravel Admin Backend for Modern Storefront
 
 > GitHub Issue: [#1](https://github.com/newesp/laravel-orderflow/issues/1)  
 > Status: `ready-for-agent`  
@@ -10,20 +10,20 @@
 
 Small e-commerce businesses operating with `modern-storefront` need a performant, reliable, and secure back-office web administration system to manage product listings, inspect customer profiles, audit orders, transition order lifecycle statuses, and monitor integration telemetry.
 
-Currently, administrative tasks in `modern-storefront` are partially handled via client-side React routes interacting directly with Supabase RLS. However, a dedicated server-side SaaS backend (built with PHP 8.3+ and Laravel 13) is required to provide server-side business workflows, robust data aggregation (such as customer lifetime value and order metrics), deterministic state machine transitions with business rule validation, demo login capabilities for prospective employers/evaluators, and integration webhook telemetry—all while safely sharing the existing Supabase PostgreSQL database without degrading storefront operations, changing storefront semantics, or exposing privileged credentials.
+Currently, administrative tasks in `modern-storefront` are partially handled via client-side React routes interacting directly with Supabase RLS. However, a dedicated server-side SaaS backend (built with PHP 8.3+ and Laravel 13) is required to provide server-side business workflows, robust data aggregation (such as customer lifetime value and order metrics), deterministic state machine transitions with business rule validation, demo login capabilities for prospective employers/evaluators, and integration webhook telemetry?�all while safely sharing the existing Supabase PostgreSQL database without degrading storefront operations, changing storefront semantics, or exposing privileged credentials.
 
 ---
 
 ## Solution
 
-Build **OrderFlow Lite** — a PHP 8.3+ / Laravel SaaS Administration Backend connecting directly to the shared Supabase PostgreSQL database via a secure server-side connection.
+Build **OrderFlow Lite** ??a PHP 8.3+ / Laravel SaaS Administration Backend connecting directly to the shared Supabase PostgreSQL database via a secure server-side connection.
 
 Key solution elements:
 1. **Shared Database Architecture**: Reads from and writes to existing PostgreSQL tables (`products`, `orders`, `order_items`, `profiles`, `auth.users`) without breaking existing RLS, triggers, or the `create_demo_order` RPC.
 2. **Dedicated Admin Authentication**: Implements a session-backed `AdminSessionUser` leveraging Supabase SSO (JWT/JWKS) for formal administrators and server-side environment variables for Demo Account capabilities.
 3. **Customer Presentation View**: Utilizes a secure PostgreSQL view `public.admin_customer_view` that safely joins `auth.users` with `public.profiles` to expose customer identity, ordering history, and lifetime spending without creating redundant customer records.
 4. **Product Catalog Management**: Manages physical and digital products respecting `slug` uniqueness, PostgreSQL `text[]` image paths, and `is_digital` / `digital_file_path` private storage attributes.
-5. **Deterministic Order Status Lifecycle**: Implements a strict `OrderStatusService` that manages linear status transitions (`pending -> processing -> completed`, `pending/processing -> cancelled`) and rejects illegal transitions by throwing domain business exceptions (`InvalidOrderStatusTransitionException`), which the API layer maps to HTTP 422 responses.
+5. **Deterministic Order Status Lifecycle**: Implements a strict `OrderStatusService` that manages linear status transitions (`pending -> processing -> received -> completed`, `pending/processing -> cancelled`) and rejects illegal transitions by throwing domain business exceptions (`InvalidOrderStatusTransitionException`), which the API layer maps to HTTP 422 responses.
 6. **Integration Telemetry**: Records domain events and webhook dispatches in `public.integration_logs` with resilient offline mocking in CI.
 
 ---
@@ -133,10 +133,10 @@ Key solution elements:
 ## Testing Decisions
 
 ### 1. Seam Architecture
-- **Primary Seam — HTTP Feature Tests (Highest Seam)**:
+- **Primary Seam ??HTTP Feature Tests (Highest Seam)**:
   - Feature tests simulate authentic browser sessions and JSON REST API requests using `$this->actingAs($adminUser)`.
   - Tests verify end-to-end controller response, database state assertions, and session/JSON response formatting.
-- **Service Seam — Order Status State Machine Tests**:
+- **Service Seam ??Order Status State Machine Tests**:
   - Unit/Service tests verify all permutation branches of status transitions and assert that `InvalidOrderStatusTransitionException` is thrown on invalid state jumps.
 
 ### 2. Test Isolation & Prior Art
@@ -150,7 +150,7 @@ Key solution elements:
 - **Auth Tests**: Guest redirection, admin login success/failure, demo admin account protection.
 - **Product Tests**: Product creation with validation, unique slug enforcement, active state toggling, digital file path persistence.
 - **Customer Tests**: Querying customers via `admin_customer_view`, order aggregation calculation.
-- **Order Tests**: Order filtering, detail inspection, valid transition progression (`pending -> processing -> completed`).
+- **Order Tests**: Order filtering, detail inspection, valid transition progression (`pending -> processing -> received -> completed`).
 - **State Machine Boundary Tests**: Asserting HTTP 422 / exception on illegal transitions (`completed -> pending`, `cancelled -> processing`).
 - **Integration Log Tests**: Ensuring log generation upon order state changes and asserting graceful failure recording when webhook fails.
 
